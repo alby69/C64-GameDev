@@ -1,0 +1,6 @@
+*.prg
+*.d64
+*.sym
+*.lbl
+*.o
+vice/

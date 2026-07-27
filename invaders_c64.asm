@@ -217,6 +217,26 @@ L_COPY_PET_CHARS
                       STA VIC_BORDER
                       STA VIC_BG
 
+                      ; Inizializza Color RAM ($D800-$DBFF) con colore verde ($05)
+                      ; e i primi 40 byte (riga HUD) con bianco ($01)
+                      LDX #$00
+L_INIT_COLOR_RAM
+                      LDA #$05       ; Verde per gli invaders, bunker, ecc.
+                      STA $D800,X
+                      STA $D900,X
+                      STA $DA00,X
+                      STA $DB00,X
+                      INX
+                      BNE L_INIT_COLOR_RAM
+
+                      ; Imposta i primi 40 byte (riga HUD) a bianco ($01)
+                      LDX #39
+L_INIT_HUD_COLOR
+                      LDA #$01       ; Bianco
+                      STA $D800,X
+                      DEX
+                      BPL L_INIT_HUD_COLOR
+
                       ; Inizializza SID
                       LDA #$0F
                       STA SID_VOL
@@ -398,11 +418,95 @@ L056A                 STA SID_FREQ_LO1
 ;   $DC00 = $FF (sel. linee), $DC01 bit 2=sin, 3=des, 4=fire
 
 L0580                 LDA #$FF
-                      STA CIA1_PRA
-L0585                 LDA CIA1_PRB   ; Leggi joystick
-                      CMP CIA1_PRB   ; Debounce
-                      BNE L0585
-L058D                 STA M03C9      ; Salva stato
+                      STA CIA1_PRA   ; Ripristina selezione colonne tastiera per leggere joystick/tastiera
+
+                      ; Verifica Pause (Tasto 'P', matrix code 15)
+                      LDA $CB
+                      CMP #15
+                      BNE L0580_NOT_PAUSE
+L0580_PAUSE_RELEASE
+                      LDA $CB
+                      CMP #15
+                      BEQ L0580_PAUSE_RELEASE
+L0580_PAUSE_LOOP
+                      ; Consenti F1 anche mentre si è in pausa!
+                      LDA $CB
+                      CMP #4         ; F1 key?
+                      BEQ L0580_QUICK_RESTART
+                      LDA $CB
+                      CMP #15        ; Tasto 'P' per riprendere?
+                      BNE L0580_PAUSE_LOOP
+L0580_RESUME_RELEASE
+                      LDA $CB
+                      CMP #15
+                      BEQ L0580_RESUME_RELEASE
+L0580_NOT_PAUSE
+
+                      ; Verifica Quick Restart (Tasto 'F1', matrix code 4)
+                      LDA $CB
+                      CMP #4
+                      BNE L0580_NOT_RESTART
+L0580_QUICK_RESTART
+                      SEI
+                      JSR L0510      ; Ripristina interrupt standard
+                      JMP L19D8      ; Torna all inizio del gioco!
+L0580_NOT_RESTART
+
+                      LDA #$FF       ; Inizializza stato tasti a rilasciati (tutti 1)
+                      STA M03C9
+
+                      ; Verifica Joystick Porta 2 - Sinistra (Bit 2 di CIA1_PRB)
+                      LDA CIA1_PRB
+                      AND #$04
+                      BNE L0580_JOY_NOT_LEFT
+                      LDA M03C9
+                      AND #$FB       ; Pulisci Bit 2 (Sinistra premuto)
+                      STA M03C9
+L0580_JOY_NOT_LEFT
+                      ; Verifica Joystick Porta 2 - Destra (Bit 3 di CIA1_PRB)
+                      LDA CIA1_PRB
+                      AND #$08
+                      BNE L0580_JOY_NOT_RIGHT
+                      LDA M03C9
+                      AND #$F7       ; Pulisci Bit 3 (Destra premuto)
+                      STA M03C9
+L0580_JOY_NOT_RIGHT
+                      ; Verifica Joystick Porta 2 - Fuoco (Bit 4 di CIA1_PRB)
+                      LDA CIA1_PRB
+                      AND #$10
+                      BNE L0580_JOY_NOT_FIRE
+                      LDA M03C9
+                      AND #$FE       ; Pulisci Bit 0 (Fuoco premuto)
+                      STA M03C9
+L0580_JOY_NOT_FIRE
+
+                      ; Verifica fallback Tastiera tramite codice matrice tasti ($CB)
+                      LDA $CB
+                      CMP #10        ; Tasto "A" (Sinistra)
+                      BNE L0580_KEY_NOT_LEFT
+                      LDA M03C9
+                      AND #$FB       ; Pulisci Bit 2 (Sinistra)
+                      STA M03C9
+L0580_KEY_NOT_LEFT
+                      LDA $CB
+                      CMP #18        ; Tasto "D" (Destra)
+                      BNE L0580_KEY_NOT_RIGHT
+                      LDA M03C9
+                      AND #$F7       ; Pulisci Bit 3 (Destra)
+                      STA M03C9
+L0580_KEY_NOT_RIGHT
+                      LDA $CB
+                      CMP #29        ; Tasto "J" (Fuoco)
+                      BEQ L0580_KEY_FIRE
+                      CMP #60        ; Tasto "Space" (Fuoco)
+                      BNE L0580_KEY_NOT_FIRE
+L0580_KEY_FIRE
+                      LDA M03C9
+                      AND #$FE       ; Pulisci Bit 0 (Fuoco)
+                      STA M03C9
+L0580_KEY_NOT_FIRE
+
+L058D                 LDA M03C9      ; Ripristina stato tasti in accumulatore per compatibilità
                       LDX M03CA
                       ; Bit 2 = sinistra
                       AND #$04
