@@ -1,28 +1,55 @@
-# Invaders — PET Disassembly & C64 Port
+# C64 Game Development Kit (c64kit) & Space Invaders
 
-**Invaders** è il classico gioco *Space Invaders* (stile Taito 1978) disassemblato per **Commodore PET** da Dave McMurtrie (Agosto 2023) ed evoluto in un port completo e ottimizzato per **Commodore 64**.
+**c64kit** è un framework e kit di sviluppo software generalizzato progettato per facilitare la creazione, il testing, l'emulazione e la build di giochi per **Commodore 64 (C64)**.
 
-Questo repository contiene:
-- `invaders.asm` — Disassemblaggio completo e documentato del gioco originale per PET.
-- `invaders_c64.asm` — Versione per **Commodore 64** con supporto a colori (Color RAM), suono SID multicanale, e controlli ottimizzati.
+Il progetto si articola su due componenti principali:
+1. **c64kit (Python library)**: Un set di moduli Python (`c64kit/`) che simula e si interfaccia con l'architettura hardware del C64 (VIC-II, SID, CIA1/CIA2, CPU e memoria standard) consentendo lo sviluppo guidato dai test e l'automazione della pipeline dei giochi.
+2. **c64lib (Assembly modular library)**: Una libreria 6502 in assembly modulare (`c64lib/`) che fornisce un'astrazione pulita dell'hardware C64 (HAL), gestione memoria (ZP allocator), audio engine, video engine, e gestori degli input per qualsiasi gioco C64.
+
+Il repository include anche **Space Invaders** (`games/invaders/`), un porting di successo dal Commodore PET originariamente ottimizzato e riorganizzato per essere il primo gioco dimostrativo completo del kit.
 
 ---
 
-## 🎮 Come Giocare su Commodore 64
+## 🗂️ Struttura del Repository
 
-### Avvio del Gioco
-Il gioco è precompilato nel file `invaders64.prg`. Per caricarlo ed eseguirlo su un emulatore (come VICE x64sc) o su hardware reale:
-```
-LOAD "INVADERS64.PRG",8,1
-RUN
-```
-*(Oppure `SYS 2062` se caricato manualmente in memoria)*
+La struttura del repository è organizzata modularmente per consentire il riutilizzo dei componenti di sviluppo:
 
-All'avvio, il gioco mostrerà la schermata iniziale "**How To Get Sound**". Premere un tasto qualsiasi per procedere al menu di gioco principale e avviare la partita.
+```
+invaders/                       # Root del repository
+├── c64kit/                     # Libreria Python (framework & emulazione)
+│   ├── core/                   # Emulazione hardware di base (Memory, CIA, Interrupt)
+│   ├── video/                  # Engine video, VIC-II, colori, sprite
+│   ├── audio/                  # SID 3 voci, voice allocation, SFX
+│   │   └── sfx.py              # Gestione ed effetti sonori
+│   ├── input/                  # Joystick (porta 1/2), Matrix keyboard
+│   ├── game/                   # State machine, Sprite engine, Collision system, HUD
+│   ├── tools/                  # Pipeline conversione asset (PNG->charset/sprite), SFX/music compiler
+│   ├── build/                  # Pipeline di build automatizzata per emulatori
+│   └── testing/                # Test harness per emulatore VICE
+├── c64lib/                     # Libreria assembly 6502 riutilizzabile
+│   ├── hal/
+│   │   └── c64_hardware.inc    # Costanti hardware C64 complete + macro standard
+│   ├── core/                   # Gestione memoria, vic_engine, sid_engine, input, irq_scheduler
+│   └── game/                   # Sprite engine assembly, collision system, state machine, HUD
+├── games/
+│   ├── invaders/               # Space Invaders (gioco completo basato su c64lib)
+│   └── template/               # Template minimale per l'avvio rapido di nuovi giochi
+├── tests/
+│   ├── unit/                   # Test unitari in Python (pytest) per verificare il framework
+│   └── integration/            # Test di integrazione tramite emulatore VICE
+├── docs/                       # Documentazione delle API Assembly, Python e tutorial
+├── Makefile                    # Wrapper per automazione dei comandi legacy
+├── setup.py                    # Script di installazione della libreria Python c64kit
+└── ROADMAP.md                  # Roadmap dettagliata per lo sviluppo del framework
+```
+
+---
+
+## 🎮 Space Invaders (Demo Game)
+
+Il classico gioco *Space Invaders* (stile Taito 1978) è il primo gioco completo sviluppato e ottimizzato per Commodore 64 usando la modularità di `c64lib`.
 
 ### Controlli di Gioco
-
-Il porting per Commodore 64 supporta controlli flessibili simultanei, permettendo di giocare sia tramite tastiera sia con un joystick inserito nella porta 2.
 
 | Comando Tastiera | Comando Joystick (Porta 2) | Azione |
 |------------------|---------------------------|--------|
@@ -34,75 +61,43 @@ Il porting per Commodore 64 supporta controlli flessibili simultanei, permettend
 
 ---
 
-## 🛠️ Compilazione e Build System
+## 🛠️ Pipeline di Sviluppo & Compilazione
 
-Il progetto include un `Makefile` pronto per l'uso per l'assemblatore incrociato `xa` (xa65).
+Il progetto automatizza le operazioni sia per la libreria Python che per il codice assembly 6502.
 
 ### Prerequisiti
-Assicurarsi di avere installato l'assemblatore `xa`. Su sistemi Debian/Ubuntu è possibile installarlo con:
+Per programmare e compilare codice C64, assicurarsi di installare l'assemblatore incrociato `xa`:
 ```bash
 sudo apt-get install xa65
 ```
 
-### Comandi Makefile
+### Installazione del framework Python `c64kit`
+Il toolkit e la suite di test possono essere installati in modalità di sviluppo locale:
+```bash
+pip install -e .
+```
 
-- **Compilare il gioco**:
+### Comandi Disponibili
+
+- **Compilare il gioco demo (Space Invaders)**:
   ```bash
   make
   ```
-  Questo comando assemblerà `invaders_c64.asm` e genererà l'eseguibile pronto `invaders64.prg`.
+  Questo comando assembla i moduli assembly e genera il file eseguibile `invaders64.prg`.
 
-- **Ripulire gli artefatti**:
+- **Eseguire la suite di test (pytest)**:
+  ```bash
+  PYTHONPATH=. pytest tests/test_invaders.py
+  ```
+
+- **Ripulire gli artefatti di compilazione**:
   ```bash
   make clean
   ```
 
-- **Avviare il gioco con VICE x64sc**:
-  ```bash
-  make run
-  ```
-
 ---
 
-## 📊 Caratteristiche del Porting PET → C64
-
-Il porting è stato completato e rifinito per sfruttare al meglio l'hardware del Commodore 64 garantendo al contempo fedeltà assoluta al gameplay originale:
-
-1. **Memoria Video & Schermate**:
-   - Conversione degli indirizzi dello schermo PET (`$8000–$83FF`) negli indirizzi standard del C64 (`$0400–$07FF`).
-   - Sincronizzazione tramite raster VIC (`VIC_RASTER` a `$F8`) per garantire un timing fluido e stabile indipendentemente dal modello C64 PAL/NTSC.
-
-2. **C64 Color RAM**:
-   - Inizializzazione automatica della Color RAM (`$D800–$DBE7`) all'avvio.
-   - Sfondo nero con HUD (punteggio e vite) in bianco e campo di gioco/bunker/invaders in verde brillante per richiamare lo stile dei monitor a fosfori verdi arcade originali.
-
-3. **Character Set Personalizzato**:
-   - Copia della Character ROM originale del C64 e sovrascrittura parziale nell'area dei caratteri grafici PET (`$60-$7F`) a `$3800` per riprodurre fedelmente la grafica PETSCII originale dei bunker e degli sprite degli invasori.
-
-4. **Suono SID Evoluto**:
-   - Conversione del sistema sonoro VIA del PET per utilizzare il chip SID del C64 (`$D4xx`).
-   - Generazione di effetti sonori per passi degli invasori, spari, esplosioni e jingle di game over stabili e definiti.
-
-5. **Self-Modifying Code (SMC)**:
-   - Preservata la logica di self-modifying code originale per la regolazione dinamica del delay di movimento degli invasori (`L08F3_SELF`) e del limite dei proiettili contemporanei (`L08D1_SELF`). Trattandosi di esecuzione in RAM sul C64, questi blocchi funzionano in modo sicuro e sono pienamente documentati nel codice sorgente.
-
-6. **Stabilità Core**:
-   - Correzione del BRK/NMI interrupt handler (`L19F6`) per ripristinare correttamente lo stack pointer (`LDX #$FF; TXS`), prevenendo crash e instabilità in caso di riavvii o interrupt multipli.
-
----
-
-## 🐛 Troubleshooting
-
-- **I caratteri appaiono vuoti o con colori casuali**:
-  - Assicurarsi di aver eseguito l'ultima build che inizializza la Color RAM. Il gioco inizializza automaticamente l'area colore `$D800-$DBFF` all'avvio del programma.
-  - Se si avvia da monitor esadecimale o dopo un reset hardware parziale, rieseguire da `RUN` o ricaricare il file `.prg` per forzare l'inizializzazione corretta.
-
-- **I controlli a tastiera non rispondono**:
-  - Il gioco legge i tasti tramite la matrice di scansione standard del C64. Accertarsi che l'emulatore catturi correttamente l'input della tastiera del PC (es. impostando la modalità keyboard corretta in VICE).
-
----
-
-## 📝 Crediti
-
-- **Dave McMurtrie** (`dave@commodore.international`): Ricostruzione e documentazione del disassemblaggio PET originale (Agosto 2023).
-- **Adattamento, Miglioramento e Porting C64**: Sviluppato e completato con successo in questo repository.
+## 📝 Documentazione e Roadmap
+Per ulteriori dettagli sull'architettura interna, sulle API o sulle fasi future di refactoring, consultare:
+- `DOCUMENTATION.md` — Documentazione dettagliata del porting originale PET e del gameplay.
+- `ROADMAP.md` — Il piano d'azione completo per guidare l'evoluzione del repository.
