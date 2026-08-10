@@ -110,10 +110,10 @@ game_logic_2.asm → game_logic_1.asm (L0600, L0780, L0B06)
 
 ---
 
-## 🎯 PHASE 1 — Foundation: Estrarre Core Generico Python
-**Priority: CRITICAL | Estimated Effort: 4-5 Jules tasks**
+## 🎯 PHASE 1 — Foundation: Estrarre Core Generico Python (COMPLETATA)
+**Priority: CRITICAL | Status: 100% COMPLETATA (Sviluppata interamente da Jules nel turn attuale)**
 
-### Task 1.1 — Completare `c64kit.core`: Hardware Completo
+### Task 1.1 — Completare `c64kit.core`: Hardware Completo (COMPLETATO)
 
 **File da modificare/creare:**
 - `c64kit/core/constants.py` → espandere
@@ -155,7 +155,7 @@ game_logic_2.asm → game_logic_1.asm (L0600, L0780, L0B06)
 
 ---
 
-### Task 1.2 — Generalizzare Video Engine
+### Task 1.2 — Generalizzare Video Engine (COMPLETATO)
 
 **File da modificare/creare:**
 - `c64kit/video/vic.py` → espandere
@@ -196,7 +196,7 @@ game_logic_2.asm → game_logic_1.asm (L0600, L0780, L0B06)
 
 ---
 
-### Task 1.3 — Generalizzare Audio Engine (SID 3 Voci)
+### Task 1.3 — Generalizzare Audio Engine (SID 3 Voci) (COMPLETATO)
 
 **File da modificare/creare:**
 - `c64kit/audio/sid.py` → refactoring completo
@@ -237,7 +237,7 @@ game_logic_2.asm → game_logic_1.asm (L0600, L0780, L0B06)
 
 ---
 
-### Task 1.4 — Generalizzare Input System
+### Task 1.4 — Generalizzare Input System (COMPLETATO)
 
 **File da modificare/creare:**
 - `c64kit/input/joystick.py` → espandere
