@@ -3,9 +3,12 @@
 *.sym
 *.lbl
 *.o
+*.o65
 vice/
 
-# Python cache
+# Python cache and metadata
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+.pytest_cache/

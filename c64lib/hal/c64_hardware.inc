@@ -60,6 +60,7 @@ VIC_SPR_DB   = $D01E
 VIC_BG_COL_B = $D01F
 VIC_BORDER   = $D020
 VIC_BG       = $D021
+VIC_BG0      = $D021 ; Alias
 VIC_BG1      = $D022
 VIC_BG2      = $D023
 VIC_BG3      = $D024
@@ -149,6 +150,14 @@ CIA2_SDR     = $DD0C
 CIA2_ICR     = $DD0D
 CIA2_CRA     = $DD0E
 CIA2_CRB     = $DD0F
+
+; ============================================================================
+; STANDARD SCREEN CONSTANTS
+; ============================================================================
+SCREEN_WIDTH  = 40
+SCREEN_HEIGHT = 25
+SCREEN_MEM    = $0400
+COLOR_MEM     = $D800
 
 ; ============================================================================
 ; HARDWARE HELPERS & MACROS
