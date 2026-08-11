@@ -630,10 +630,10 @@ class VICEHarness:
 
 ---
 
-## 🎯 PHASE 4 — Refactoring Assembly: `c64lib/`
-**Priority: HIGH | Estimated Effort: 5-6 Jules tasks**
+## 🎯 PHASE 4 — Refactoring Assembly: `c64lib/` (COMPLETATA)
+**Priority: HIGH | Status: 100% COMPLETATA (Sviluppata interamente da Jules nel turn attuale)**
 
-### Task 4.1 — Estrarre HAL (Hardware Abstraction Layer)
+### Task 4.1 — Estrarre HAL (Hardware Abstraction Layer) (COMPLETATO)
 
 **File da creare:** `c64lib/hal/c64_hardware.inc`
 
@@ -707,7 +707,7 @@ CIA2_ICR = $DD0D
 
 ---
 
-### Task 4.2 — Estrarre Memory Manager
+### Task 4.2 — Estrarre Memory Manager (COMPLETATO)
 
 **File da creare:** `c64lib/core/memory_manager.asm`
 
@@ -736,7 +736,7 @@ MEMORY_SPRITE    = $2000
 
 ---
 
-### Task 4.3 — Estrarre Video Core
+### Task 4.3 — Estrarre Video Core (COMPLETATO)
 
 **File da creare:** `c64lib/core/vic_engine.asm`
 
@@ -764,7 +764,7 @@ vic_set_sprite_pos:  ; Input: X=sprite_id, Y=x, A=y
 
 ---
 
-### Task 4.4 — Estrarre Audio Engine
+### Task 4.4 — Estrarre Audio Engine (COMPLETATO)
 
 **File da creare:** `c64lib/core/sid_engine.asm`
 
@@ -800,7 +800,7 @@ sfx_shoot:
 
 ---
 
-### Task 4.5 — Estrarre Input System
+### Task 4.5 — Estrarre Input System (COMPLETATO)
 
 **File da creare:** `c64lib/core/input_system.asm`
 
@@ -830,7 +830,7 @@ INPUT_STATE:
 
 ---
 
-### Task 4.6 — Estrarre IRQ Scheduler
+### Task 4.6 — Estrarre IRQ Scheduler (COMPLETATO)
 
 **File da creare:** `c64lib/core/irq_scheduler.asm`
 

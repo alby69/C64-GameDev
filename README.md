@@ -6,6 +6,13 @@ Il progetto si articola su due componenti principali:
 1. **c64kit (Python library)**: Un set di moduli Python (`c64kit/`) che simula e si interfaccia con l'architettura hardware del C64 (VIC-II, SID, CIA1/CIA2, CPU e memoria standard) consentendo lo sviluppo guidato dai test e l'automazione della pipeline dei giochi.
 2. **c64lib (Assembly modular library)**: Una libreria 6502 in assembly modulare (`c64lib/`) che fornisce un'astrazione pulita dell'hardware C64 (HAL), gestione memoria (ZP allocator), audio engine, video engine, e gestori degli input per qualsiasi gioco C64.
 
+   I moduli principali di **c64lib/core/** includono:
+   - **`memory_manager.asm`**: Gestore della memoria Zero Page (`zp_alloc` e `zp_free`) con tracking bitmap dei blocchi liberi per evitare conflitti d'uso tra diversi sottosistemi.
+   - **`vic_engine.asm`**: Inizializzazione video (`vic_init`), selezione del banco di memoria VIC (`vic_set_bank`), copia del set di caratteri custom (`vic_copy_charset`), pulizia schermo/colore (`vic_clear_screen`), sincronizzazione raster (`vic_wait_raster`) e controllo sprite.
+   - **`sid_engine.asm`**: Reset SID (`sid_init`), riproduzione note su 3 canali indipendenti (`sid_play_note`), impostazione ADSR e waveform, modulazione del volume principale, e un database integrato di effetti sonori standard (`sid_play_effect`).
+   - **`input_system.asm`**: Inizializzazione CIA1 (`input_init`), lettura joystick per porta 1 e 2 (`input_scan_joystick`), scansione tastiera (`input_scan_keyboard`), traduzione caratteri PETSCII (`input_get_key`), e mappatura logica ad alto livello (`input_map_action`).
+   - **`irq_scheduler.asm`**: Master IRQ Scheduler a priorità e intervalli (`irq_init`, `irq_add_task`, `irq_remove_task`) che supporta fino a 8 task concorrenti, insieme ad interrupt raster specifici (`irq_set_raster`) e sincronizzazione verticale (`irq_wait_vsync`).
+
 Il repository include anche **Space Invaders** (`games/invaders/`), un porting di successo dal Commodore PET originariamente ottimizzato e riorganizzato per essere il primo gioco dimostrativo completo del kit.
 
 ---
