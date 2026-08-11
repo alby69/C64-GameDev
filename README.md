@@ -4,14 +4,20 @@
 
 Il progetto si articola su due componenti principali:
 1. **c64kit (Python library)**: Un set di moduli Python (`c64kit/`) che simula e si interfaccia con l'architettura hardware del C64 (VIC-II, SID, CIA1/CIA2, CPU e memoria standard) consentendo lo sviluppo guidato dai test e l'automazione della pipeline dei giochi.
-2. **c64lib (Assembly modular library)**: Una libreria 6502 in assembly modulare (`c64lib/`) che fornisce un'astrazione pulita dell'hardware C64 (HAL), gestione memoria (ZP allocator), audio engine, video engine, e gestori degli input per qualsiasi gioco C64.
+2. **c64lib (Assembly modular library)**: Una libreria 6502 in assembly modulare (`c64lib/`) che fornisce un'astrazione pulita dell'hardware C64 (HAL), gestione memoria (ZP allocator), audio engine, video engine, gestori degli input, e framework di gioco (state machine, sprite, collisioni, HUD) per qualsiasi gioco C64.
 
-   I moduli principali di **c64lib/core/** includono:
+   I moduli di base di **c64lib/core/** includono:
    - **`memory_manager.asm`**: Gestore della memoria Zero Page (`zp_alloc` e `zp_free`) con tracking bitmap dei blocchi liberi per evitare conflitti d'uso tra diversi sottosistemi.
    - **`vic_engine.asm`**: Inizializzazione video (`vic_init`), selezione del banco di memoria VIC (`vic_set_bank`), copia del set di caratteri custom (`vic_copy_charset`), pulizia schermo/colore (`vic_clear_screen`), sincronizzazione raster (`vic_wait_raster`) e controllo sprite.
    - **`sid_engine.asm`**: Reset SID (`sid_init`), riproduzione note su 3 canali indipendenti (`sid_play_note`), impostazione ADSR e waveform, modulazione del volume principale, e un database integrato di effetti sonori standard (`sid_play_effect`).
    - **`input_system.asm`**: Inizializzazione CIA1 (`input_init`), lettura joystick per porta 1 e 2 (`input_scan_joystick`), scansione tastiera (`input_scan_keyboard`), traduzione caratteri PETSCII (`input_get_key`), e mappatura logica ad alto livello (`input_map_action`).
    - **`irq_scheduler.asm`**: Master IRQ Scheduler a priorità e intervalli (`irq_init`, `irq_add_task`, `irq_remove_task`) che supporta fino a 8 task concorrenti, insieme ad interrupt raster specifici (`irq_set_raster`) e sincronizzazione verticale (`irq_wait_vsync`).
+
+   I moduli del framework di gioco di **c64lib/game/** includono:
+   - **`state_machine.asm`**: Macchina a stati finiti (`state_init`, `state_change`, `state_update`, `state_draw`) per gestire l'orchestrazione degli stati di gioco (Boot, Title, Play, GameOver, etc.) tramite una tabella di puntatori a callback.
+   - **`sprite_engine.asm`**: Gestore sia di sprite basati su caratteri (blocchi multi-carattere) che di sprite hardware VIC-II (`sprite_draw`, `sprite_clear`, `sprite_animate`, `sprite_move`, `sprite_clip`), ottimizzato per flessibilità e prestazioni.
+   - **`collision_system.asm`**: Rilevamento delle collisioni AABB (Axis-Aligned Bounding Box) (`collision_init`, `collision_add`, `collision_remove`, `collision_check_pair`, `collision_check_all`) per un massimo di 24 oggetti attivi, con popolamento automatico di un buffer delle collisioni.
+   - **`hud_system.asm`**: Visualizzazione del punteggio (unboxing BCD a 6 cifre), del numero di vite tramite icone e del timer di gioco (`hud_init`, `hud_set_score`, `hud_set_lives`, `hud_set_high_score`, `hud_set_timer`, `hud_draw`, `hud_flash`), con supporto per il posizionamento ad inizio o fine schermo e per effetti di flash colorato.
 
 Il repository include anche **Space Invaders** (`games/invaders/`), un porting di successo dal Commodore PET originariamente ottimizzato e riorganizzato per essere il primo gioco dimostrativo completo del kit.
 
