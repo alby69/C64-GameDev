@@ -858,11 +858,11 @@ irq_wait_vsync:          ; Blocca fino a raster $100 (o SYNC_LINE_VAL)
 ---
 
 ## 🎯 PHASE 5 — Game Framework Assembly
-**Priority: MEDIUM | Estimated Effort: 4-5 Jules tasks**
+**Priority: MEDIUM | Status: 100% COMPLETATA (Sviluppata interamente da Jules nel turn attuale)**
 
-### Task 5.1 — Sprite/Tile Engine Assembly
+### Task 5.1 — Sprite/Tile Engine Assembly (COMPLETATO)
 
-**File da creare:** `c64lib/game/sprite_engine.asm`
+**File creato:** `c64lib/game/sprite_engine.asm`
 
 **Requisiti Jules:**
 ```asm
@@ -888,9 +888,9 @@ sprite_clip:             ; Clipping ai bordi
 
 ---
 
-### Task 5.2 — Collision System Assembly
+### Task 5.2 — Collision System Assembly (COMPLETATO)
 
-**File da creare:** `c64lib/game/collision_system.asm`
+**File creato:** `c64lib/game/collision_system.asm`
 
 **Requisiti Jules:**
 ```asm
@@ -913,9 +913,9 @@ collision_check_pair:    ; Input: A=id1, X=id2
 
 ---
 
-### Task 5.3 — State Machine Assembly
+### Task 5.3 — State Machine Assembly (COMPLETATO)
 
-**File da creare:** `c64lib/game/state_machine.asm`
+**File creato:** `c64lib/game/state_machine.asm`
 
 **Requisiti Jules:**
 ```asm
@@ -945,9 +945,9 @@ state_draw:              ; Chiama draw stato corrente
 
 ---
 
-### Task 5.4 — HUD/Score System Assembly
+### Task 5.4 — HUD/Score System Assembly (COMPLETATO)
 
-**File da creare:** `c64lib/game/hud_system.asm`
+**File creato:** `c64lib/game/hud_system.asm`
 
 **Requisiti Jules:**
 ```asm
