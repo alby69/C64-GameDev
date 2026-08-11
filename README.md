@@ -97,6 +97,43 @@ pip install -e .
 
 ---
 
+## 🧰 Python Developer Toolkit (Phase 3)
+
+Il framework include ora un insieme completo di strumenti Python (completati nella **Phase 3**) per automatizzare la pipeline di asset, suoni, build e testing:
+
+### 1. Convertitore di Asset (`c64kit.tools.asset_converter`)
+Utility CLI per convertire immagini PNG/JPG nei formati grafici nativi del C64 (Hires Charset, Sprite Hardware, o Tilemap) con algoritmo di dithering di Floyd-Steinberg e deduplicazione automatica dei caratteri per ottimizzare lo spazio.
+
+- **Generare un Charset ottimizzato (deduplicato) con anteprima HTML**:
+  ```bash
+  python -m c64kit.tools.asset_converter --input assets/charset.png --output src/charset.asm --mode charset --preview preview.html
+  ```
+- **Convertire immagini in Sprite Hardware (24x21 pixel)**:
+  ```bash
+  python -m c64kit.tools.asset_converter --input assets/sprites.png --output src/sprites.asm --mode sprite
+  ```
+
+### 2. Compilatore Audio SID (`c64kit.tools.sid_compiler`)
+Traduttore di definizioni SFX ed effetti sonori scritti in formato YAML/JSON in strutture dati assembly 6502 compatibili con il chip audio SID. Supporta rampe di frequenza/cutoff, inviluppi ADSR e note musicali standard (es. `C-4`, `A-4`).
+
+- **Compilare file audio YAML in codice Assembly**:
+  ```bash
+  python -m c64kit.tools.sid_compiler --input assets/sfx.yaml --output src/sfx_data.asm
+  ```
+
+### 3. Build System Incrementale (`c64kit.build.build_system`)
+Un gestore di compilazione automatizzato che legge le specifiche da un file di configurazione del progetto `c64project.yaml` ed esegue l'assemblatore incrociato `xa` in modo incrementale (compila solo se le sorgenti o gli asset sono stati modificati dall'ultima build).
+
+- **Eseguire la build del progetto**:
+  ```bash
+  python -m c64kit.build.build_system --config c64project.yaml
+  ```
+
+### 4. Test Harness VICE (`c64kit.testing.vice_harness`)
+Libreria per integrare e orchestrare test di integrazione automatici controllando l'emulatore VICE in modalità headless. Supporta il caricamento di programmi `.prg`, la lettura dello stato dei registri SID, la simulazione dell'input e la cattura di screenshot con confronto visivo.
+
+---
+
 ## 📝 Documentazione e Roadmap
 Per ulteriori dettagli sull'architettura interna, sulle API o sulle fasi future di refactoring, consultare:
 - `DOCUMENTATION.md` — Documentazione dettagliata del porting originale PET e del gameplay.
