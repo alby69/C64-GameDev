@@ -1,0 +1,25 @@
+project:
+  name: "Space Invaders C64"
+  version: "1.2.0"
+  target: c64
+
+build:
+  assembler: xa
+  flags: [-XMASM, -Igames/invaders/src, -I.]
+  source_dirs: [games/invaders/src, c64lib]
+  main: games/invaders/src/main.asm
+  output: games/invaders/invaders64.prg
+
+assets:
+  charset: games/invaders/assets/charset.png
+  sprites: games/invaders/assets/sprites.png
+  sfx: games/invaders/assets/sfx.yaml
+
+testing:
+  emulator: x64sc
+  timeout_cycles: 5000000
+  screenshot_compare: tests/ref/
+
+packaging:
+  d64: true
+  crt: false

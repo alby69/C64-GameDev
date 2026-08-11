@@ -1,3 +1,6 @@
+#ifndef C64_HARDWARE_INC
+#define C64_HARDWARE_INC
+
 ; ============================================================================
 ; MODULE: c64_hardware.inc
 ; PURPOSE: Comprehensive Commodore 64 Hardware Registers and Macros
@@ -175,3 +178,5 @@ COLOR_MEM     = $D800
     AND #$FC : \
     ORA #(3 - (bank)) : \
     STA $DD00
+
+#endif
