@@ -15,6 +15,7 @@ __all__ = [
     "C64Project",
     "load_project_config",
     "run_assembler",
+    "package_project",
     "is_rebuild_required",
     "build_project",
 ]
@@ -104,6 +105,20 @@ def is_rebuild_required(project: C64Project) -> bool:
     if not os.path.exists(output_path):
         return True
 
+    # Check if packaged files are missing
+    base_dir = os.path.dirname(output_path)
+    filename_no_ext = os.path.splitext(os.path.basename(output_path))[0]
+
+    if project.packaging.get("d64"):
+        d64_path = os.path.join(base_dir, f"{filename_no_ext}.d64") if base_dir else f"{filename_no_ext}.d64"
+        if not os.path.exists(d64_path):
+            return True
+
+    if project.packaging.get("crt"):
+        crt_path = os.path.join(base_dir, f"{filename_no_ext}.crt") if base_dir else f"{filename_no_ext}.crt"
+        if not os.path.exists(crt_path):
+            return True
+
     output_mtime = os.path.getmtime(output_path)
 
     # Collect all sources & assets paths
@@ -156,6 +171,95 @@ def run_assembler(project: C64Project) -> bool:
         return False
 
 
+def package_project(project: C64Project) -> bool:
+    """Packages the compiled output file (.prg) into configured target formats (.d64, .crt).
+
+    Args:
+        project: C64Project config.
+
+    Returns:
+        True if packaging succeeded or was not needed, False if packaging failed.
+    """
+    if not project.packaging:
+        return True
+
+    prg_path = project.output_file
+    if not os.path.exists(prg_path):
+        print(f"Error: Output file '{prg_path}' does not exist. Cannot package.")
+        return False
+
+    base_dir = os.path.dirname(prg_path)
+    filename_no_ext = os.path.splitext(os.path.basename(prg_path))[0]
+
+    success = True
+
+    # 1. Generate .d64 disk image
+    if project.packaging.get("d64"):
+        d64_path = os.path.join(base_dir, f"{filename_no_ext}.d64") if base_dir else f"{filename_no_ext}.d64"
+        print(f"Packaging: Generating disk image '{d64_path}'...")
+        # Remove existing file if any
+        if os.path.exists(d64_path):
+            try:
+                os.remove(d64_path)
+            except OSError:
+                pass
+
+        # c1541 format command
+        cmd_format = ["c1541", "-format", f"{filename_no_ext[:16]},01", "d64", d64_path]
+        # c1541 write command
+        cmd_write = ["c1541", d64_path, "-write", prg_path, filename_no_ext[:16]]
+
+        try:
+            res_format = subprocess.run(cmd_format, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if res_format.returncode != 0:
+                print(f"Error: Failed to format disk image {d64_path}. Error:\n{res_format.stderr}")
+                success = False
+            else:
+                res_write = subprocess.run(cmd_write, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                if res_write.returncode != 0:
+                    print(f"Error: Failed to write to disk image {d64_path}. Error:\n{res_write.stderr}")
+                    success = False
+                else:
+                    print(f"Disk image '{d64_path}' created successfully.")
+        except FileNotFoundError:
+            print("Warning: 'c1541' utility (part of VICE) is not installed or not in PATH. Skipping .d64 generation.")
+            pass
+
+    # 2. Generate .crt cartridge
+    crt_option = project.packaging.get("crt")
+    if crt_option:
+        crt_path = os.path.join(base_dir, f"{filename_no_ext}.crt") if base_dir else f"{filename_no_ext}.crt"
+        print(f"Packaging: Generating cartridge '{crt_path}'...")
+
+        # Determine cartridge type
+        cart_type = "normal"
+        if isinstance(crt_option, str):
+            cart_type = crt_option
+
+        # Remove existing file if any
+        if os.path.exists(crt_path):
+            try:
+                os.remove(crt_path)
+            except OSError:
+                pass
+
+        # cartconv command
+        cmd_cart = ["cartconv", "-p", "-t", cart_type, "-i", prg_path, "-o", crt_path]
+
+        try:
+            res_cart = subprocess.run(cmd_cart, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if res_cart.returncode != 0:
+                print(f"Error: Failed to convert cartridge {crt_path}. Error:\n{res_cart.stderr}")
+                success = False
+            else:
+                print(f"Cartridge '{crt_path}' created successfully with type '{cart_type}'.")
+        except FileNotFoundError:
+            print("Warning: 'cartconv' utility (part of VICE) is not installed or not in PATH. Skipping .crt generation.")
+            pass
+
+    return success
+
+
 def build_project(project_path: str = "c64project.yaml", force: bool = False) -> bool:
     """Builds the C64 project using incremental tracking.
 
@@ -179,6 +283,8 @@ def build_project(project_path: str = "c64project.yaml", force: bool = False) ->
         return True
 
     success = run_assembler(project)
+    if success:
+        success = package_project(project)
     return success
 
 

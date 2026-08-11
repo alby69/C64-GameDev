@@ -116,3 +116,38 @@ Dispatches update ticks to the current state callback.
 
 ### `state_draw`
 Dispatches redraw ticks to the current state callback.
+
+---
+
+## 👾 Sprite Engine & Sprite Multiplexer (`c64lib/game/sprite_engine.asm`)
+
+Manages standard character-based sprites, hardware sprites, clipping, and dynamic sprite multiplexing.
+
+### `sprite_draw`
+Draws a sprite based on its definition (supports character-based and hardware sprites).
+* **Input**: `zSprPtr` ($FB) = pointer to `SPRITE_DEF` struct
+
+### `sprite_clear`
+Clears a character-based sprite or disables/hides a hardware sprite.
+* **Input**: `zSprPtr` ($FB) = pointer to `SPRITE_DEF` struct
+
+### `sprite_animate`
+Increments the animation frame of a sprite.
+* **Input**: `zSprPtr` ($FB) = pointer to `SPRITE_DEF` struct
+
+### `sprite_move`
+Updates position of the sprite.
+* **Input**: `zSprPtr` ($FB) = pointer to `SPRITE_DEF` struct, `A` = delta X, `Y` = delta Y
+
+### `sprite_clip`
+Clips sprite position to standard boundaries.
+* **Input**: `zSprPtr` ($FB) = pointer to `SPRITE_DEF` struct
+
+### `sprite_multiplex_init`
+Initializes the multiplexer arrays, clears active sprite count, and maps default indices.
+
+### `sprite_multiplex_sort`
+Sorts up to 16 virtual sprites by their Y-coordinates in ascending order using a highly efficient Bubble Sort algorithm with early exit.
+
+### `sprite_multiplex_apply`
+Maps active virtual sprites (sorted by Y-coordinate) to the 8 physical Commodore 64 hardware sprites, automatically setting positions, pointer slots, color registers, and VIC-II enable masks.

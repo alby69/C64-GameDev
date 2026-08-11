@@ -15,7 +15,7 @@ Il progetto si articola su due componenti principali:
 
    I moduli del framework di gioco di **c64lib/game/** includono:
    - **`state_machine.asm`**: Macchina a stati finiti (`state_init`, `state_change`, `state_update`, `state_draw`) per gestire l'orchestrazione degli stati di gioco (Boot, Title, Play, GameOver, etc.) tramite una tabella di puntatori a callback.
-   - **`sprite_engine.asm`**: Gestore sia di sprite basati su caratteri (blocchi multi-carattere) che di sprite hardware VIC-II (`sprite_draw`, `sprite_clear`, `sprite_animate`, `sprite_move`, `sprite_clip`), ottimizzato per flessibilità e prestazioni.
+   - **`sprite_engine.asm`**: Gestore sia di sprite basati su caratteri (blocchi multi-carattere) che di sprite hardware VIC-II (`sprite_draw`, `sprite_clear`, `sprite_animate`, `sprite_move`, `sprite_clip`), ottimizzato per flessibilità e prestazioni. **Include anche un modulo di Sprite Multiplexing** (`sprite_multiplex_init`, `sprite_multiplex_sort`, `sprite_multiplex_apply`) per gestire fino a 16 sprite virtuali ordinati in tempo reale tramite Bubble Sort e mappati dinamicamente sui primi 8 slot fisici del VIC-II.
    - **`collision_system.asm`**: Rilevamento delle collisioni AABB (Axis-Aligned Bounding Box) (`collision_init`, `collision_add`, `collision_remove`, `collision_check_pair`, `collision_check_all`) per un massimo di 24 oggetti attivi, con popolamento automatico di un buffer delle collisioni.
    - **`hud_system.asm`**: Visualizzazione del punteggio (unboxing BCD a 6 cifre), del numero di vite tramite icone e del timer di gioco (`hud_init`, `hud_set_score`, `hud_set_lives`, `hud_set_high_score`, `hud_set_timer`, `hud_draw`, `hud_flash`), con supporto per il posizionamento ad inizio o fine schermo e per effetti di flash colorato.
 
@@ -96,7 +96,16 @@ pip install -e .
   ```bash
   python3 -m c64kit.build.build_system --config games/invaders/c64project.yaml
   ```
-  Questo comando assembla i moduli assembly e genera il file eseguibile `games/invaders/invaders64.prg`.
+  Questo comando assembla i moduli assembly e genera il file eseguibile `games/invaders/invaders64.prg`, insieme all'immagine disco `.d64` e alla cartuccia `.crt` se configurate nel progetto.
+
+- **Automazione del Packaging (.d64, .crt)**:
+  La pipeline di compilazione supporta il packaging nativo delle build. Configurando la sezione `packaging` nel file `c64project.yaml` del tuo gioco:
+  ```yaml
+  packaging:
+    d64: true
+    crt: true
+  ```
+  Il build system rileverà i tool di sistema `c1541` e `cartconv` (dalla suite VICE) e genererà automaticamente un floppy disk `.d64` e una cartuccia `.crt` (formato standard `normal` o custom) ad ogni compilazione.
 
 - **Eseguire la suite di test completa (pytest)**:
   ```bash
