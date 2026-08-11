@@ -1,0 +1,25 @@
+project:
+  name: "C64 Template Game"
+  version: "1.0.0"
+  target: c64
+
+build:
+  assembler: xa
+  flags: [-XMASM, -Igames/template/src, -I.]
+  source_dirs: [games/template/src, c64lib]
+  main: games/template/src/main.asm
+  output: games/template/template.prg
+
+assets:
+  charset: games/template/assets/charset.png
+  sprites: games/template/assets/sprites.png
+  sfx: games/template/assets/sfx.yaml
+
+testing:
+  emulator: x64sc
+  timeout_cycles: 5000000
+  screenshot_compare: tests/ref/
+
+packaging:
+  d64: true
+  crt: false
