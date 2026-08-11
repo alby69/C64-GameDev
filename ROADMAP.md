@@ -1,8 +1,8 @@
 # ROADMAP.md — C64 Game Development Kit (c64kit)
-## Refactoring del Repository `alby69/invaders` in Libreria Generalizzata per Giochi C64
+## Refactoring del Repository `alby69/C64GameDev` in Libreria Generalizzata per Giochi C64
 
 > **Destinatario:** Google Jules (Async Coding Agent)
-> **Repository:** https://github.com/alby69/invaders
+> **Repository:** https://github.com/alby69/C64GameDev
 > **Linguaggi:** Python 3.11+, 6502 Assembly (xa65), Makefile
 > **Target:** Commodore 64 (PAL/NTSC)
 > **Data:** 2026-08-10
@@ -60,6 +60,7 @@ Refactored Space Invaders inside `games/invaders/` into structured state callbac
 - **Task 7.2 — Documentazione API**: Created assembly API (`docs/ASSEMBLY_API.md`) and Python API (`docs/PYTHON_API.md`) documentations.
 - **Task 7.3 — Tutorial "Primo Gioco in 30 Minuti"**: Created step-by-step developer tutorial (`docs/TUTORIAL_30MIN.md`) and memory allocations guide (`docs/MEMORY_MAP.md`).
 
-### 🎯 PHASE 8 — Ottimizzazioni Avanzate
-**Status: In Progress / Future Plan**
-Refining multiplexing techniques and cartridges build automation targets.
+### 🎯 PHASE 8 — Ottimizzazioni Avanzate & Packaging Automation
+**Status: 100% COMPLETATA**
+- **Task 8.1 — Automazione Build Cartucce e Immagini Disco (.crt, .d64)**: Estesa la pipeline di build in Python (`c64kit/build/build_system.py`) per supportare il packaging nativo delle ROM. Se abilitato in `c64project.yaml`, compila automaticamente sia file cartuccia C64 (`.crt` generati tramite `cartconv`) che immagini floppy disk standard (`.d64` formattate e scritte tramite `c1541`).
+- **Task 8.2 — Sprite Multiplexing**: Implementata una libreria generalizzata per sprite multiplexing in `c64lib/game/sprite_engine.asm`, comprensiva di ordinamento dinamico (Bubble Sort ad alta efficienza per 16 sprite virtuali) e mappatura automatica dei primi 8 sprite fisici del VIC-II.

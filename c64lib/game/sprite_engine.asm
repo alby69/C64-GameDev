@@ -449,6 +449,162 @@ _scl_hw_done:
         RTS
 
 ; ----------------------------------------------------------------------------
+; ROUTINE: sprite_multiplex_init
+; PURPOSE: Initialize virtual sprite multiplexer arrays
+; ----------------------------------------------------------------------------
+sprite_multiplex_init:
+        LDA #0
+        STA mMultiplexCount
+        LDX #0
+_smi_loop:
+        TXA
+        STA mVirtualIndex,X
+        LDA #0
+        STA mVirtualY,X
+        STA mVirtualX,X
+        STA mVirtualPtr,X
+        STA mVirtualCol,X
+        INX
+        CPX #16
+        BNE _smi_loop
+        RTS
+
+; ----------------------------------------------------------------------------
+; ROUTINE: sprite_multiplex_sort
+; PURPOSE: Sort virtual sprites by Y-coordinate (Bubble Sort)
+; ----------------------------------------------------------------------------
+sprite_multiplex_sort:
+        LDA mMultiplexCount
+        CMP #2
+        BCC _sms_done           ; If count < 2, nothing to sort
+
+        SEC
+        SBC #1
+        STA mSmsOuterLimit
+
+_sms_outer_loop:
+        LDA #0
+        STA mSmsSwapped         ; Reset swapped flag
+        LDX #0                  ; J = 0
+
+_sms_inner_loop:
+        ; Compare mVirtualY[mVirtualIndex[J]] and mVirtualY[mVirtualIndex[J+1]]
+        LDY mVirtualIndex,X     ; Y1 = mVirtualIndex[J]
+        LDA mVirtualY,Y         ; A = mVirtualY[Y1]
+        STA mSmsTempY1
+
+        INX                     ; X = J + 1
+        LDY mVirtualIndex,X     ; Y2 = mVirtualIndex[J+1]
+        LDA mVirtualY,Y         ; A = mVirtualY[Y2]
+        DEX                     ; Restore X = J
+
+        CMP mSmsTempY1          ; Compare Y2 with Y1
+        BCS _sms_no_swap        ; If Y2 >= Y1, no swap needed
+
+        ; Swap mVirtualIndex[J] and mVirtualIndex[J+1]
+        LDA mVirtualIndex,X     ; A = mVirtualIndex[J]
+        INX                     ; X = J + 1
+        LDY mVirtualIndex,X     ; Y = mVirtualIndex[J+1]
+        STA mVirtualIndex,X     ; mVirtualIndex[J+1] = A
+        DEX                     ; Restore X = J
+        TYA
+        STA mVirtualIndex,X     ; mVirtualIndex[J] = Y
+
+        LDA #1
+        STA mSmsSwapped         ; Set swapped flag
+
+_sms_no_swap:
+        INX                     ; J++
+        TXA
+        CMP mSmsOuterLimit
+        BNE _sms_inner_loop
+
+        ; If no swaps occurred, we can stop early!
+        LDA mSmsSwapped
+        BEQ _sms_done
+
+        ; Decrement outer limit for optimization
+        DEC mSmsOuterLimit
+        BNE _sms_outer_loop
+
+_sms_done:
+        RTS
+
+; ----------------------------------------------------------------------------
+; ROUTINE: sprite_multiplex_apply
+; PURPOSE: Map the sorted virtual sprites to the 8 physical C64 hardware sprites
+; ----------------------------------------------------------------------------
+sprite_multiplex_apply:
+        ; Clear VIC-II sprite enable mask first (we will enable active sprites dynamically)
+        LDA #0
+        STA VIC_SPR_EN
+
+        ; Determine how many sprites we need to display (min of mMultiplexCount and 8)
+        LDA mMultiplexCount
+        CMP #8
+        BCC _sma_limit_ok
+        LDA #8
+_sma_limit_ok:
+        STA mSmsActiveLimit     ; Store active limit (up to 8)
+        TAY                     ; Y = count of sprites to map
+        BEQ _sma_done           ; If 0, nothing to do
+
+        LDX #0                  ; Physical Sprite ID (0 to 7)
+
+_sma_loop:
+        ; Get virtual sprite index
+        LDA mVirtualIndex,X
+        STA mSmsTempIndex       ; Store virtual sprite index
+
+        ; Load Y coordinate
+        TAY                     ; Y = virtual index
+        LDA mVirtualY,Y
+        STA mSmsTempY1          ; Store Y coordinate
+
+        ; Load X coordinate
+        LDA mVirtualX,Y
+        STA mSmsTempX           ; Store X coordinate
+
+        ; Load Pointer
+        LDA mVirtualPtr,Y
+        STA mSmsTempPtrL        ; Store pointer
+
+        ; Load Color
+        LDA mVirtualCol,Y
+        STA mSmsTempCol         ; Store color
+
+        ; Map to physical sprite X and Y
+        TXA
+        ASL                     ; X * 2
+        TAY                     ; Use Y as indexing register for VIC
+        LDA mSmsTempX
+        STA VIC_SPR0_X,Y
+        LDA mSmsTempY1
+        STA VIC_SPR0_X+1,Y      ; Y coordinate is next register
+
+        ; Set Pointer
+        LDA mSmsTempPtrL
+        STA SCREEN_MEM+$03F8,X
+
+        ; Set Color
+        LDA mSmsTempCol
+        STA VIC_SPR_COL0,X
+
+        ; Enable Sprite
+        LDA _spr_bit_masks,X
+        ORA VIC_SPR_EN
+        STA VIC_SPR_EN
+
+        INX
+        CPX mMultiplexCount     ; Check if we mapped all active virtual sprites
+        BEQ _sma_done
+        CPX #8                  ; Check if we mapped all 8 physical sprites
+        BNE _sma_loop
+
+_sma_done:
+        RTS
+
+; ----------------------------------------------------------------------------
 ; HELPER: _spr_calc_screen_addr
 ; PURPOSE: Calculate screen RAM start row address (base $0400)
 ; INPUT: A = Y coordinate (row 0 to 24)
@@ -497,3 +653,23 @@ mSprTempDY:        .byte $00
 
 mSprSrcOffset:     .byte $00
 mSprDestOffset:    .byte $00
+
+; ----------------------------------------------------------------------------
+; SPRITE MULTIPLEXER VARIABLES
+; ----------------------------------------------------------------------------
+mMultiplexCount:   .byte $00
+mVirtualY:         .dsb 16, $00
+mVirtualX:         .dsb 16, $00
+mVirtualPtr:       .dsb 16, $00
+mVirtualCol:       .dsb 16, $00
+mVirtualIndex:     .dsb 16, $00
+
+mSmsOuterLimit:    .byte $00
+mSmsSwapped:       .byte $00
+mSmsActiveLimit:   .byte $00
+mSmsTempY1:        .byte $00
+mSmsTempX:         .byte $00
+mSmsTempCol:       .byte $00
+mSmsTempIndex:     .byte $00
+mSmsTempPtrL:      .byte $00
+mSmsTempPtrH:      .byte $00

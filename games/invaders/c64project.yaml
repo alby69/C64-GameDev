@@ -22,4 +22,4 @@ testing:
 
 packaging:
   d64: true
-  crt: false
+  crt: true
