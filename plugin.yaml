@@ -1,0 +1,16 @@
+name: game-dev
+display_name: "C64-GameDev — Kit sviluppo giochi"
+version: "0.1.0"
+sdk_api_version: "1"
+description: "Framework Python c64kit (emulazione HW, build pipeline, test) + libreria assembly c64lib (sprite, collisioni, state machine, HUD) e giochi demo."
+entry_points:
+  build: "c64kit.build.build_system:main"
+capabilities:
+  - game-framework
+  - assembly-library
+  - sprite-engine
+  - collision-system
+  - hud
+  - build
+requires_python: ">=3.8"
+standalone: true
