@@ -15,7 +15,7 @@
 Il repository attuale contiene:
 1. **Un porting funzionante** di Space Invaders PET→C64 in assembly modulare (10 file `.asm`)
 2. **Una libreria Python `c64kit/`** (15 moduli) che emula l'hardware C64 per testing/verifica
-3. **Test pytest** e **documentazione** dettagliata (`DOCUMENTATION.md`)
+3. **Test pytest** e **documentazione** dettagliata (`docs/`, `README.md`)
 
 L'obiettivo è trasformare `c64kit` da **toolkit specifico per Invaders** a **framework generico per sviluppo giochi C64**, con:
 - `c64kit/` → libreria Python riutilizzabile per qualsiasi gioco C64
@@ -64,3 +64,10 @@ Refactored Space Invaders inside `games/invaders/` into structured state callbac
 **Status: 100% COMPLETATA**
 - **Task 8.1 — Automazione Build Cartucce e Immagini Disco (.crt, .d64)**: Estesa la pipeline di build in Python (`c64kit/build/build_system.py`) per supportare il packaging nativo delle ROM. Se abilitato in `c64project.yaml`, compila automaticamente sia file cartuccia C64 (`.crt` generati tramite `cartconv`) che immagini floppy disk standard (`.d64` formattate e scritte tramite `c1541`).
 - **Task 8.2 — Sprite Multiplexing**: Implementata una libreria generalizzata per sprite multiplexing in `c64lib/game/sprite_engine.asm`, comprensiva di ordinamento dinamico (Bubble Sort ad alta efficienza per 16 sprite virtuali) e mappatura automatica dei primi 8 sprite fisici del VIC-II.
+
+### 🎯 PHASE 9 — Pulizia Repository & Solo-C64
+**Status: 100% COMPLETATA**
+- **Task 9.1 — Eliminare il Codice PET dalla Root**: Rimossi dalla root tutti i file assembly non-C64. Il disassembly PET originale (`invaders.asm`) è archiviato in `source/pet/` (non compilato), insieme alla sua documentazione tecnica.
+- **Task 9.2 — Archiviare il Port Monolitico Legacy**: Il primo port PET→C64 monolitico (`main.asm`, `memory.inc`, `video_*.asm`, `game_*.asm`, `data.asm`, ecc.) — superato da `games/invaders/` basato su `c64lib` — è archiviato in `source/legacy/` come riferimento storico.
+- **Task 9.3 — Aggiornamento Tooling e Documentazione**: Il `Makefile` ora delega al build system Python (`games/invaders/c64project.yaml`). README, ROADMAP e TUTORIAL aggiornati per riflettere la struttura definitiva.
+- **Task 9.4 — Verifica Solo-C64**: Nessun residuo di indirizzi hardware PET (`$E8xx`, `$8000`, vettori `$0090`) nel codice attivo (`games/`, `c64lib/`, `c64kit/`). Tutto l'assembly attivo è compilato e testato per Commodore 64.

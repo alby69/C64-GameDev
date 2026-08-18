@@ -6,6 +6,8 @@ Il progetto si articola su due componenti principali:
 1. **c64kit (Python library)**: Un set di moduli Python (`c64kit/`) che simula e si interfaccia con l'architettura hardware del C64 (VIC-II, SID, CIA1/CIA2, CPU e memoria standard) consentendo lo sviluppo guidato dai test e l'automazione della pipeline dei giochi.
 2. **c64lib (Assembly modular library)**: Una libreria 6502 in assembly modulare (`c64lib/`) che fornisce un'astrazione pulita dell'hardware C64 (HAL), gestione memoria (ZP allocator), audio engine, video engine, gestori degli input, e framework di gioco (state machine, sprite, collisioni, HUD) per qualsiasi gioco C64.
 
+> **Nota:** Tutto il codice assembly nel progetto è **esclusivamente per Commodore 64**. Il codice storico per Commodore PET è archiviato (non compilato) in `source/pet/`.
+
    I moduli di base di **c64lib/core/** includono:
    - **`memory_manager.asm`**: Gestore della memoria Zero Page (`zp_alloc` e `zp_free`) con tracking bitmap dei blocchi liberi per evitare conflitti d'uso tra diversi sottosistemi.
    - **`vic_engine.asm`**: Inizializzazione video (`vic_init`), selezione del banco di memoria VIC (`vic_set_bank`), copia del set di caratteri custom (`vic_copy_charset`), pulizia schermo/colore (`vic_clear_screen`), sincronizzazione raster (`vic_wait_raster`) e controllo sprite.
@@ -19,7 +21,7 @@ Il progetto si articola su due componenti principali:
    - **`collision_system.asm`**: Rilevamento delle collisioni AABB (Axis-Aligned Bounding Box) (`collision_init`, `collision_add`, `collision_remove`, `collision_check_pair`, `collision_check_all`) per un massimo di 24 oggetti attivi, con popolamento automatico di un buffer delle collisioni.
    - **`hud_system.asm`**: Visualizzazione del punteggio (unboxing BCD a 6 cifre), del numero di vite tramite icone e del timer di gioco (`hud_init`, `hud_set_score`, `hud_set_lives`, `hud_set_high_score`, `hud_set_timer`, `hud_draw`, `hud_flash`), con supporto per il posizionamento ad inizio o fine schermo e per effetti di flash colorato.
 
-Il repository include anche **Space Invaders** (`games/invaders/`), un porting di successo dal Commodore PET originariamente ottimizzato e riorganizzato per essere il primo gioco dimostrativo completo del kit.
+Il repository include anche **Space Invaders** (`games/invaders/`), un porting completo per Commodore 64, riorganizzato come primo gioco dimostrativo del kit e **interamente basato su `c64lib`** (nessun residuo del codice PET originale).
 
 ---
 
@@ -28,18 +30,17 @@ Il repository include anche **Space Invaders** (`games/invaders/`), un porting d
 La struttura del repository è organizzata modularmente per consentire il riutilizzo dei componenti di sviluppo:
 
 ```
-invaders/                       # Root del repository
+C64-GameDev/                   # Root del repository
 ├── c64kit/                     # Libreria Python (framework & emulazione)
 │   ├── core/                   # Emulazione hardware di base (Memory, CIA, Interrupt)
 │   ├── video/                  # Engine video, VIC-II, colori, sprite
 │   ├── audio/                  # SID 3 voci, voice allocation, SFX
-│   │   └── sfx.py              # Gestione ed effetti sonori
 │   ├── input/                  # Joystick (porta 1/2), Matrix keyboard
 │   ├── game/                   # State machine, Sprite engine, Collision system, HUD
 │   ├── tools/                  # Pipeline conversione asset (PNG->charset/sprite), SFX/music compiler
 │   ├── build/                  # Pipeline di build automatizzata per emulatori
 │   └── testing/                # Test harness per emulatore VICE
-├── c64lib/                     # Libreria assembly 6502 riutilizzabile
+├── c64lib/                     # Libreria assembly 6502 riutilizzabile (solo C64)
 │   ├── hal/
 │   │   └── c64_hardware.inc    # Costanti hardware C64 complete + macro standard
 │   ├── core/                   # Gestione memoria, vic_engine, sid_engine, input, irq_scheduler
@@ -47,9 +48,11 @@ invaders/                       # Root del repository
 ├── games/
 │   ├── invaders/               # Space Invaders (gioco completo basato su c64lib)
 │   └── template/               # Template minimale per l'avvio rapido di nuovi giochi
+├── source/
+│   ├── pet/                    # [Storico, non compilato] Codice originale PET + documentazione
+│   └── legacy/                 # [Storico, non compilato] Primo port monolitico PET→C64
 ├── tests/
-│   ├── unit/                   # Test unitari in Python (pytest) per verificare il framework
-│   └── integration/            # Test di integrazione tramite emulatore VICE
+│   └── *.py                    # Test unitari in Python (pytest) per il framework
 ├── docs/                       # Documentazione delle API Assembly, Python e tutorial
 ├── Makefile                    # Wrapper per automazione dei comandi legacy
 ├── setup.py                    # Script di installazione della libreria Python c64kit
@@ -60,7 +63,7 @@ invaders/                       # Root del repository
 
 ## 🎮 Space Invaders (Demo Game)
 
-Il classico gioco *Space Invaders* (stile Taito 1978) è il primo gioco completo sviluppato e ottimizzato per Commodore 64 usando la modularità di `c64lib`.
+Il classico gioco *Space Invaders* (stile Taito 1978) è il primo gioco completo sviluppato per Commodore 64 usando la modularità di `c64lib`.
 
 ### Controlli di Gioco
 
@@ -96,6 +99,10 @@ pip install -e .
   ```bash
   python3 -m c64kit.build.build_system --config games/invaders/c64project.yaml
   ```
+  oppure, via Makefile:
+  ```bash
+  make invaders
+  ```
   Questo comando assembla i moduli assembly e genera il file eseguibile `games/invaders/invaders64.prg`, insieme all'immagine disco `.d64` e alla cartuccia `.crt` se configurate nel progetto.
 
 - **Automazione del Packaging (.d64, .crt)**:
@@ -128,6 +135,8 @@ Questo comando clona la struttura del template, la configura per `MioGioco`, e p
 python3 -m c64kit.build.build_system --config games/miogioco/c64project.yaml
 ```
 
+> **Per una guida dettagliata passo-passo su come creare un nuovo gioco dal template, consulta [`docs/TUTORIAL_30MIN.md`](docs/TUTORIAL_30MIN.md) e [`docs/ASSEMBLY_API.md`](docs/ASSEMBLY_API.md).**
+
 ---
 
 ## 📝 Documentazione e Roadmap
@@ -136,4 +145,5 @@ Per ulteriori dettagli sull'architettura interna, sulle API o sulle fasi future 
 - `docs/PYTHON_API.md` — Documentazione dettagliata delle API Python `c64kit`.
 - `docs/TUTORIAL_30MIN.md` — Tutorial "Il tuo primo gioco C64 in 30 minuti".
 - `docs/MEMORY_MAP.md` — Mappa e gestione della memoria RAM e Zero Page.
+- `source/pet/DOCUMENTATION_PET.md` — Documentazione storica del codice PET originale (riferimento).
 - `ROADMAP.md` — Il piano d'azione completo per guidare l'evoluzione del repository.

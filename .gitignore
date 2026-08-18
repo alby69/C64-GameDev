@@ -1,5 +1,6 @@
 *.prg
 *.d64
+*.crt
 *.sym
 *.lbl
 *.o

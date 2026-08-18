@@ -27,6 +27,9 @@ echo "Creating new game project: $GAME_NAME inside $TARGET_DIR..."
 mkdir -p "games"
 cp -r games/template "$TARGET_DIR"
 
+# Remove build artifacts copied from the template (keep only sources/assets)
+rm -f "$TARGET_DIR"/*.prg "$TARGET_DIR"/*.d64 "$TARGET_DIR"/*.crt
+
 # Customize project configuration file
 if [ -f "$TARGET_DIR/c64project.yaml" ]; then
     # Replace project names

@@ -1,39 +1,49 @@
 # ****************************************************************************
-# Makefile -- C64 Space Invaders Build System
+# Makefile -- C64 GameDev Kit build system wrapper
+# ****************************************************************************
+# Convenience wrapper around the Python build system (c64kit.build.build_system).
+# Each game is defined by its own c64project.yaml under games/.
 # ****************************************************************************
 
-AS = xa
-ASFLAGS = -XMASM
-TARGET = invaders64.prg
-SRC = main.asm
+INVADERS_CONFIG = games/invaders/c64project.yaml
+TEMPLATE_CONFIG = games/template/c64project.yaml
 
-all: $(TARGET)
+# Default target: build the Space Invaders demo game
+all: invaders
 
-$(TARGET): $(SRC)
-	$(AS) $(ASFLAGS) $(SRC) -o $(TARGET)
+# ---------------------------------------------------------------------------
+# Build targets
+# ---------------------------------------------------------------------------
 
-ntsc: $(SRC)
-	$(AS) $(ASFLAGS) -DNTSC $(SRC) -o $(TARGET)
+invaders:
+	python3 -m c64kit.build.build_system --config $(INVADERS_CONFIG)
 
-pal: $(SRC)
-	$(AS) $(ASFLAGS) -DPAL $(SRC) -o $(TARGET)
+template:
+	python3 -m c64kit.build.build_system --config $(TEMPLATE_CONFIG)
 
-test: $(TARGET)
-	@echo "Running automated headless test under VICE x64sc..."
-	xvfb-run x64sc -autostartprgmode 1 -limitcycles 5000000 $(TARGET) || [ $$? -eq 1 ]
-	@echo "Automated test completed successfully!"
+build:
+	python3 -m c64kit.build.build_system --config $(CONFIG)
 
-dist: $(TARGET)
-	@echo "Generating release disk image (.d64)..."
-	rm -f invaders.d64
-	c1541 -format "invaders,01" d64 invaders.d64 -write $(TARGET) invaders
-	@echo "Packaging release distribution ZIP..."
-	rm -f invaders-c64.zip
-	zip -r invaders-c64.zip $(TARGET) invaders.d64 README.md
-	@echo "Release packaged: invaders-c64.zip"
+# ---------------------------------------------------------------------------
+# Test targets
+# ---------------------------------------------------------------------------
+
+test:
+	python3 -m pytest
+
+# ---------------------------------------------------------------------------
+# Run targets (VICE emulator)
+# ---------------------------------------------------------------------------
+
+run: invaders
+	x64sc games/invaders/invaders64.prg
+
+# ---------------------------------------------------------------------------
+# Cleanup
+# ---------------------------------------------------------------------------
 
 clean:
-	rm -f $(TARGET) invaders.d64 invaders-c64.zip
+	rm -f games/invaders/invaders64.prg games/invaders/invaders64.d64 games/invaders/invaders64.crt
+	rm -f games/template/template.prg games/template/template.d64 games/template/template.crt
 
-run: $(TARGET)
-	x64sc $(TARGET)
+.PHONY: all invaders template build test run clean

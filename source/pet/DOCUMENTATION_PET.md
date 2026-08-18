@@ -22,7 +22,7 @@
 
 ## 1. Struttura generale
 
-Il codice è organizzato come un disco assemblativo unico (`invaders.asm`) che contiene:
+Il codice è organizzato come un disco assemblativo unico (`invaders_pet.asm`) che contiene:
 
 - **Codice eseguibile**: da `$0401` a circa `$19F6` (≈5.6 KB)
 - **Dati**: da `SCRD1000` (`$1000` nel file) fino a `SCRD1F00` — tabelle di posizioni, sprite in caratteri, stringhe di testo e la schermata "How To Get Sound"
