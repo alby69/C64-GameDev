@@ -166,13 +166,20 @@ COLOR_MEM     = $D800
 ; HARDWARE HELPERS & MACROS
 ; ============================================================================
 
+; Macro: SAFE_SEI
+; Description: Safely disables interrupts while preserving CPU status flags on stack.
 #define SAFE_SEI \
     PHP : \
     SEI
 
+; Macro: SAFE_CLI
+; Description: Restores original interrupt status flags from stack.
 #define SAFE_CLI \
     PLP
 
+; Macro: SET_VIC_BANK
+; Description: Sets VIC-II bank (0-3) by updating CIA2 Port A bits 0 and 1.
+; Parameter: bank - Bank index (0: $0000-$3FFF, 1: $4000-$7FFF, 2: $8000-$BFFF, 3: $C000-$FFFF)
 #define SET_VIC_BANK(bank) \
     LDA $DD00 : \
     AND #$FC : \

@@ -4,10 +4,12 @@ Checks that all core modules in c64lib/core/ compile cleanly using the 'xa' asse
 """
 
 import os
+import shutil
 import subprocess
 import pytest
 
 
+@pytest.mark.skipif(shutil.which("xa") is None, reason="Cross-assembler 'xa' is not installed in system PATH.")
 @pytest.mark.parametrize("asm_file", [
     "c64lib/core/memory_manager.asm",
     "c64lib/core/vic_engine.asm",

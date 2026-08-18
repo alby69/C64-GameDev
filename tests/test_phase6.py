@@ -4,10 +4,12 @@ Verifies the build pipeline and compilation of the refactored Space Invaders gam
 """
 
 import os
+import shutil
 import pytest
 from c64kit.build.build_system import load_project_config, build_project, is_rebuild_required
 
 
+@pytest.mark.skipif(shutil.which("xa") is None, reason="Cross-assembler 'xa' is not installed in system PATH.")
 def test_invaders_project_configuration():
     """Verifies that the invaders c64project.yaml compiles cleanly using build_project."""
     project_path = "games/invaders/c64project.yaml"
@@ -25,6 +27,7 @@ def test_invaders_project_configuration():
     assert os.path.exists(project.output_file), f"Compiled output '{project.output_file}' was not created!"
 
 
+@pytest.mark.skipif(shutil.which("xa") is None, reason="Cross-assembler 'xa' is not installed in system PATH.")
 def test_template_project_configuration():
     """Verifies that the template c64project.yaml compiles cleanly using build_project."""
     project_path = "games/template/c64project.yaml"

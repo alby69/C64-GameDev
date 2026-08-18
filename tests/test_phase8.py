@@ -4,11 +4,13 @@ Verifies cartridge and disk packaging, incremental rebuild tracking, and sprite 
 """
 
 import os
+import shutil
 import subprocess
 import pytest
 from c64kit.build.build_system import load_project_config, build_project, is_rebuild_required
 
 
+@pytest.mark.skipif(shutil.which("xa") is None, reason="Cross-assembler 'xa' is not installed in system PATH.")
 def test_sprite_multiplex_compilation():
     """Ensures that c64lib/game/sprite_engine.asm with the new multiplexer compiles cleanly."""
     asm_file = "c64lib/game/sprite_engine.asm"
@@ -21,6 +23,10 @@ def test_sprite_multiplex_compilation():
     assert res.returncode == 0, f"Compilation failed for {asm_file}!\nSTDERR:\n{res.stderr}"
 
 
+@pytest.mark.skipif(
+    shutil.which("xa") is None or shutil.which("c1541") is None or shutil.which("cartconv") is None,
+    reason="External tools ('xa', 'c1541', 'cartconv') are not installed in system PATH."
+)
 def test_packaging_automation():
     """Verifies that invaders project configuration builds and packages successfully to both .d64 and .crt."""
     project_path = "games/invaders/c64project.yaml"
@@ -45,6 +51,10 @@ def test_packaging_automation():
     assert os.path.exists(crt_path), f"Packaged .crt cartridge '{crt_path}' not found."
 
 
+@pytest.mark.skipif(
+    shutil.which("xa") is None or shutil.which("c1541") is None or shutil.which("cartconv") is None,
+    reason="External tools ('xa', 'c1541', 'cartconv') are not installed in system PATH."
+)
 def test_incremental_packaging_tracking():
     """Verifies that is_rebuild_required correctly detects if packaged targets are deleted."""
     project_path = "games/invaders/c64project.yaml"

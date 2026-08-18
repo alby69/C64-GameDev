@@ -4,10 +4,12 @@ Checks that all game framework modules in c64lib/game/ compile cleanly using the
 """
 
 import os
+import shutil
 import subprocess
 import pytest
 
 
+@pytest.mark.skipif(shutil.which("xa") is None, reason="Cross-assembler 'xa' is not installed in system PATH.")
 @pytest.mark.parametrize("asm_file", [
     "c64lib/game/state_machine.asm",
     "c64lib/game/sprite_engine.asm",

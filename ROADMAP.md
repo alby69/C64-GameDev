@@ -71,3 +71,49 @@ Refactored Space Invaders inside `games/invaders/` into structured state callbac
 - **Task 9.2 — Archiviare il Port Monolitico Legacy**: Il primo port PET→C64 monolitico (`main.asm`, `memory.inc`, `video_*.asm`, `game_*.asm`, `data.asm`, ecc.) — superato da `games/invaders/` basato su `c64lib` — è archiviato in `source/legacy/` come riferimento storico.
 - **Task 9.3 — Aggiornamento Tooling e Documentazione**: Il `Makefile` ora delega al build system Python (`games/invaders/c64project.yaml`). README, ROADMAP e TUTORIAL aggiornati per riflettere la struttura definitiva.
 - **Task 9.4 — Verifica Solo-C64**: Nessun residuo di indirizzi hardware PET (`$E8xx`, `$8000`, vettori `$0090`) nel codice attivo (`games/`, `c64lib/`, `c64kit/`). Tutto l'assembly attivo è compilato e testato per Commodore 64.
+
+---
+
+## 🚀 ROADMAP v2 — EVOLUZIONE DEL FRAMEWORK (Phases 10–14)
+
+### 🎯 PHASE 10 — Stabilizzazione, Merge & CI/CD — **Priorità: Critica**
+
+- **Task 10.1 — Merge controllato del branch `jules-15716038001056046165-7a8d2788`**:
+  Eseguire il merge in `main`, quindi **ripristinare le include guard** in `c64lib/hal/c64_hardware.inc` conservando i commenti di documentazione delle macro introdotti dal branch. Allineare `setup.py` (classifiers nuovi + vincoli di dipendenza di `main`).
+  *DoD:* `xa` compila `games/invaders` e `games/template` senza errori; `pytest` verde; il file `.inc` può essere incluso N volte senza "Label already defined".
+- **Task 10.2 — Fix eager import di pygame**:
+  Rendere `c64kit/__init__.py` lazy (import di `InvadersGame` solo su accesso via PEP 562 `__getattr__`) oppure spostare la dipendenza pygame in un extras `pip install c64kit[emulation]`.
+  *DoD:* `python3 -c "from c64kit.build.build_system import build_project"` funziona in un ambiente **senza** pygame.
+- **Task 10.3 — Test condizionali sui tool esterni**:
+  Introdurre `pytest.mark.skipif(shutil.which("xa") is None, ...)` (e analoghi per `c1541`, `cartconv`, `x64sc`) nei test che richiedono tool di sistema.
+  *DoD:* `pytest` è verde sia dentro sia fuori il container Docker, con skip espliciti e conteggiati.
+- **Task 10.4 — GitHub Actions CI**:
+  Workflow `.github/workflows/ci.yml`: build dell'immagine Docker (o install di `xa65` + VICE), compilazione assembly di entrambi i progetti, `pytest`, lint Python (`ruff`), upload degli artifact `.prg`.
+  *DoD:* badge CI nel README; PR bloccate se la build fallisce.
+- **Task 10.5 — Allineamento versioni e packaging moderno**:
+  Introdurre `pyproject.toml`, unificare la versione in un solo punto (`c64kit/__version__.py`), correggere `requires_python` in `plugin.yaml` a `>=3.11`, compilare il CHANGELOG retroattivo per le fasi 1–9.
+  *DoD:* `pip install .` funziona da `pyproject.toml`; versione unica e coerente ovunque.
+
+### 🎯 PHASE 11 — Qualità & Performance Assembly — **Priorità: Alta**
+
+- **Task 11.1 — Standard include guard**: verificare/applicare il pattern `#ifndef/#define/#endif` a tutti i `.inc` e moduli `.asm` di `c64lib`; aggiungere un test pytest che include due volte ogni header e compila.
+- **Task 11.2 — Raster-time budget**: documentare il costo in cicli delle routine critiche (`sprite_multiplex_sort`, `collision_check_all`, `hud_draw`) e aggiungere misura automatica via VICE monitor nell'harness di test.
+- **Task 11.3 — Ottimizzazione sprite multiplexer**: sostituire il Bubble Sort con insertion sort (ottimo per N≤16 quasi-ordinati frame-to-frame) e valutare double buffering dei registri sprite per eliminare flicker ai boundary di raster.
+- **Task 11.4 — PAL/NTSC switching**: tabella timing centralizzata e auto-detect (`$02A6`) nel template.
+
+### 🎯 PHASE 12 — Parità c64lib ↔ c64kit: Moduli Mancanti — **Priorità: Media**
+
+- **Task 12.1 — Tilemap & scrolling engine assembly** (parità con `c64kit/video/scroll.py` e `c64kit/game/tilemap.py`): scroller hardware a carattere con double buffering, direzioni 4-way.
+- **Task 12.2 — Music player assembly** (parità con `c64kit/audio/music_player.py`): player di pattern/track su IRQ con 3 voci, formato condiviso con `sid_compiler`.
+- **Task 12.3 — Compressione risorse**: supporto RLE (e integrazione opzionale Exomizer) nel build system per charset/livelli, con decompressione in `c64lib/core/`.
+
+### 🎯 PHASE 13 — Validazione Framework: Secondo Gioco Demo — **Priorità: Media**
+
+- **Task 13.1 — Nuovo gioco demo** in `games/` di genere diverso da Invaders (es. shooter a scrolling verticale), per validare la genericità di `c64lib` e far emergere gap API.
+- **Task 13.2 — Regression testing visuale**: screenshot-diff automatizzato via VICE headless (`vice_harness.py`) su frame di riferimento dei giochi demo.
+
+### 🎯 PHASE 14 — Developer Experience & Release — **Priorità: Bassa**
+
+- **Task 14.1 — Generazione automatica API docs** dai commenti dei moduli assembly → `docs/ASSEMBLY_API.md` sempre allineato.
+- **Task 14.2 — Release automation**: GitHub Release con artifact prebuildati (`.prg`, `.d64`, `.crt`) dei giochi demo ad ogni tag semver.
+- **Task 14.3 — `new_game.sh` migliorato**: validazione nome, opzione `--with-scrolling` / `--with-music` per scaffold mirati.
