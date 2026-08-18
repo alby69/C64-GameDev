@@ -1,0 +1,10 @@
+sfx:
+  beep:
+    waveform: "pulse"
+    attack: 0
+    decay: 4
+    sustain: 0
+    release: 0
+    freq_start: "C-4"
+    freq_end: "C-4"
+    duration_ms: 50
