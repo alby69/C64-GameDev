@@ -4,11 +4,13 @@ Questo tutorial ti guida passo-passo nella creazione di un nuovo gioco per
 **Commodore 64** usando il **template** fornito nel progetto, la libreria assembly
 `c64lib` e il build system Python `c64kit`.
 
-> **Prerequisito:** aver installato `xa` (assemblatore incrociato) e il framework:
-> ```bash
-> sudo apt-get install xa65
-> pip install -e .
-> ```
+> **Prerequisito:** un ambiente C64 funzionante. Due opzioni:
+> - **Docker (consigliata):** `docker compose build` (vedi `docs/DOCKER.md`). Nessuna installazione sull'host.
+> - **Nativa:** installare `xa` e il framework:
+>   ```bash
+>   sudo apt-get install xa65
+>   pip install -e .
+>   ```
 
 ---
 

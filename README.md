@@ -54,7 +54,9 @@ C64-GameDev/                   # Root del repository
 ├── tests/
 │   └── *.py                    # Test unitari in Python (pytest) per il framework
 ├── docs/                       # Documentazione delle API Assembly, Python e tutorial
-├── Makefile                    # Wrapper per automazione dei comandi legacy
+├── Dockerfile                  # Ambiente di sviluppo in container (xa, VICE, Python)
+├── docker-compose.yml          # Orchestrazione Docker (volume, build, test, run)
+├── Makefile                    # Wrapper per automazione dei comandi (build/test/docker)
 ├── setup.py                    # Script di installazione della libreria Python c64kit
 └── ROADMAP.md                  # Roadmap dettagliata per lo sviluppo del framework
 ```
@@ -82,10 +84,19 @@ Il classico gioco *Space Invaders* (stile Taito 1978) è il primo gioco completo
 Il progetto automatizza le operazioni sia per la libreria Python che per il codice assembly 6502.
 
 ### Prerequisiti
+Due modalità: **nativa** o **Docker** (consigliata, vedi sezione Docker sopra).
+
+#### Modalità nativa
 Per programmare e compilare codice C64, assicurarsi di installare l'assemblatore incrociato `xa`:
 ```bash
 sudo apt-get install xa65
 ```
+
+#### Modalità Docker (consigliata)
+```bash
+docker compose build
+```
+Nessuna installazione richiesta sull'host.
 
 ### Installazione del framework Python `c64kit`
 Il toolkit e la suite di test possono essere installati in modalità di sviluppo locale:
@@ -121,6 +132,72 @@ pip install -e .
 
 ---
 
+## 🐳 Usare il Progetto con Docker (Consigliato)
+
+Il progetto include un ambiente di sviluppo completo in **Docker** (`Dockerfile` +
+`docker-compose.yml`) con tutti gli strumenti necessari già installati:
+
+- **Assemblatore incrociato** `xa` (xa65)
+- **Emulatore VICE** (`x64sc`, `x64`, `c1541`, `cartconv`)
+- **Xvfb** (virtual framebuffer) per test headless dell'emulatore
+- **Python 3.12** + dipendenze `c64kit` (pygame, numpy, PyYAML, Pillow, pytest)
+- **zip / unzip** per il packaging
+
+Non serve installare nulla sull'host: basta Docker.
+
+### Prerequisiti
+
+- Docker Engine 24+ e Docker Compose v2+.
+- La cartella del progetto viene **montata come volume** in `/workspace`:
+  le modifiche locali sono visibili subito nel container e gli artefatti generati
+  (`.prg`, `.d64`, `.crt`) restano sulla tua macchina.
+
+### Comandi principali
+
+```bash
+# Costruisce l'immagine (la prima volta può richiedere qualche minuto)
+docker compose build
+
+# Compila Space Invaders
+docker compose run --rm dev python3 -m c64kit.build.build_system --config games/invaders/c64project.yaml
+
+# Compila il template
+docker compose run --rm dev python3 -m c64kit.build.build_system --config games/template/c64project.yaml
+
+# Esegue la suite di test completa
+docker compose run --rm dev python3 -m pytest
+
+# Apre una shell interattiva dentro il container
+docker compose run --rm dev /bin/bash
+```
+
+### Comandi Makefile
+
+```bash
+make docker-build     # costruisce l'immagine c64gamedev:latest
+make docker-invaders  # compila Space Invaders
+make docker-template  # compila il template
+make docker-test      # esegue pytest
+make docker-shell     # apre una shell interattiva
+```
+
+### Permessi e UID/GID
+
+Il container crea un utente con lo **stesso UID/GID dell'host** (default 1000/1000)
+per poter scrivere nel volume montato. Se il tuo utente ha un UID diverso, passalo
+a Docker Compose:
+
+```bash
+UID=$(id -u) GID=$(id -g) docker compose build
+UID=$(id -u) GID=$(id -g) docker compose run --rm dev ...
+```
+
+> **Nota:** la configurazione `docker-compose.yml` usa `network_mode: host` per
+> consentire l'accesso al display X dell'host (per eseguire VICE con GUI da dentro
+> il container). Per la GUI serve `xhost +local:` sull'host.
+
+---
+
 ## 🧰 Creare un Nuovo Gioco (Developer Experience)
 
 Puoi avviare lo sviluppo di un nuovo gioco C64 istantaneamente a partire dal template fornito usando il comando di bootstrap:
@@ -141,6 +218,7 @@ python3 -m c64kit.build.build_system --config games/miogioco/c64project.yaml
 
 ## 📝 Documentazione e Roadmap
 Per ulteriori dettagli sull'architettura interna, sulle API o sulle fasi future di refactoring, consultare:
+- `docs/DOCKER.md` — Guida completa all'ambiente di sviluppo Docker.
 - `docs/ASSEMBLY_API.md` — Documentazione dettagliata delle API assembly `c64lib`.
 - `docs/PYTHON_API.md` — Documentazione dettagliata delle API Python `c64kit`.
 - `docs/TUTORIAL_30MIN.md` — Tutorial "Il tuo primo gioco C64 in 30 minuti".

@@ -1,0 +1,35 @@
+# ============================================================================
+# docker-compose.yml — C64 GameDev Kit
+#
+# Monta la cartella del progetto (read-write) in /workspace e fornisce
+# comandi convenienti per build, test, run e shell.
+#
+# Uso (dalla root del progetto):
+#   docker compose run --rm dev build        # compila tutti i giochi
+#   docker compose run --rm dev test         # esegue pytest
+#   docker compose run --rm dev invaders     # compila Space Invaders
+#   docker compose run --rm dev shell        # apre una shell interattiva
+# ============================================================================
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_UID: ${UID:-1000}
+        USER_GID: ${GID:-1000}
+    image: c64gamedev:latest
+    container_name: c64gamedev
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - PULSE_SERVER=${PULSE_SERVER:-}
+    # Abilita l'accesso al display X dell'host (per eseguire VICE con GUI)
+    # Richiede 'xhost +local:' sull'host.
+    network_mode: host
+    stdin_open: true
+    tty: true
+    command: ["/bin/bash"]
