@@ -17,6 +17,12 @@ STATE_GAMEOVER = 5
 STATE_HIGH     = 6
 STATE_NONE     = $FF
 
+; Callback Offset Constants
+STATE_CB_ENTER  = 0
+STATE_CB_EXIT   = 2
+STATE_CB_UPDATE = 4
+STATE_CB_DRAW   = 6
+
 ; Zero Page workspace used for indirect addressing
 zStateTempAddr = $FB   ; uses $FB and $FC
 
@@ -47,57 +53,18 @@ state_change:
         CMP #STATE_NONE
         BEQ _sc_enter_new       ; If no state is active, jump straight to enter
 
-        ; 2. Call EXIT handler of current state (offset = state_id * 8 + 2)
-        JSR _sc_calc_state_offset
-        ; Add 2 for EXIT callback offset
-        LDA zStateTempAddr
-        CLC
-        ADC #2
-        STA zStateTempAddr
-        LDA zStateTempAddr+1
-        ADC #0
-        STA zStateTempAddr+1
-
-        ; Load EXIT pointer
-        LDY #0
-        LDA (zStateTempAddr),Y
-        STA mStateCallPtr
-        INY
-        LDA (zStateTempAddr),Y
-        STA mStateCallPtr+1
-
-        ; Call exit callback if not null
-        LDA mStateCallPtr
-        ORA mStateCallPtr+1
-        BEQ _sc_enter_new
-        JSR _execute_state_callback
+        ; 2. Call EXIT handler of current state
+        LDY #STATE_CB_EXIT
+        JSR state_invoke_callback
 
 _sc_enter_new:
         ; 3. Update current state to the new state
         PLA                     ; Restore new state ID
         STA mCurrentState
-        PHA                     ; Keep on stack for enter callback
 
-        ; 4. Call ENTER handler of new state (offset = state_id * 8 + 0)
-        LDA mCurrentState
-        JSR _sc_calc_state_offset
-
-        ; Load ENTER pointer
-        LDY #0
-        LDA (zStateTempAddr),Y
-        STA mStateCallPtr
-        INY
-        LDA (zStateTempAddr),Y
-        STA mStateCallPtr+1
-
-        ; Call enter callback if not null
-        LDA mStateCallPtr
-        ORA mStateCallPtr+1
-        BEQ _sc_done
-        JSR _execute_state_callback
-
-_sc_done:
-        PLA                     ; Restore stack
+        ; 4. Call ENTER handler of new state
+        LDY #STATE_CB_ENTER
+        JSR state_invoke_callback
         RTS
 
 ; ----------------------------------------------------------------------------
@@ -109,29 +76,9 @@ state_update:
         CMP #STATE_NONE
         BEQ _su_done
 
-        ; Call UPDATE handler of current state (offset = state_id * 8 + 4)
-        JSR _sc_calc_state_offset
-        LDA zStateTempAddr
-        CLC
-        ADC #4
-        STA zStateTempAddr
-        LDA zStateTempAddr+1
-        ADC #0
-        STA zStateTempAddr+1
-
-        ; Load UPDATE pointer
-        LDY #0
-        LDA (zStateTempAddr),Y
-        STA mStateCallPtr
-        INY
-        LDA (zStateTempAddr),Y
-        STA mStateCallPtr+1
-
-        ; Call update callback if not null
-        LDA mStateCallPtr
-        ORA mStateCallPtr+1
-        BEQ _su_done
-        JSR _execute_state_callback
+        ; Call UPDATE handler of current state
+        LDY #STATE_CB_UPDATE
+        JSR state_invoke_callback
 
 _su_done:
         RTS
@@ -145,29 +92,9 @@ state_draw:
         CMP #STATE_NONE
         BEQ _sd_done
 
-        ; Call DRAW handler of current state (offset = state_id * 8 + 6)
-        JSR _sc_calc_state_offset
-        LDA zStateTempAddr
-        CLC
-        ADC #6
-        STA zStateTempAddr
-        LDA zStateTempAddr+1
-        ADC #0
-        STA zStateTempAddr+1
-
-        ; Load DRAW pointer
-        LDY #0
-        LDA (zStateTempAddr),Y
-        STA mStateCallPtr
-        INY
-        LDA (zStateTempAddr),Y
-        STA mStateCallPtr+1
-
-        ; Call draw callback if not null
-        LDA mStateCallPtr
-        ORA mStateCallPtr+1
-        BEQ _sd_done
-        JSR _execute_state_callback
+        ; Call DRAW handler of current state
+        LDY #STATE_CB_DRAW
+        JSR state_invoke_callback
 
 _sd_done:
         RTS
@@ -175,6 +102,42 @@ _sd_done:
 ; ----------------------------------------------------------------------------
 ; HELPER ROUTINES
 ; ----------------------------------------------------------------------------
+
+; ----------------------------------------------------------------------------
+; ROUTINE: state_invoke_callback
+; PURPOSE: Calculate callback pointer for state ID and offset, then execute if non-null
+; INPUT: A = state ID, Y = callback offset (STATE_CB_ENTER, EXIT, UPDATE, DRAW)
+; ----------------------------------------------------------------------------
+state_invoke_callback:
+        STY mCbOffsetTemp
+        JSR _sc_calc_state_offset
+
+        ; Add callback offset to zStateTempAddr
+        LDY mCbOffsetTemp
+        TYA
+        CLC
+        ADC zStateTempAddr
+        STA zStateTempAddr
+        LDA zStateTempAddr+1
+        ADC #0
+        STA zStateTempAddr+1
+
+        ; Load callback pointer
+        LDY #0
+        LDA (zStateTempAddr),Y
+        STA mStateCallPtr
+        INY
+        LDA (zStateTempAddr),Y
+        STA mStateCallPtr+1
+
+        ; Call callback if non-null
+        LDA mStateCallPtr
+        ORA mStateCallPtr+1
+        BEQ _sic_done
+        JSR _execute_state_callback
+
+_sic_done:
+        RTS
 
 ; Calculate state offset: state_id * 8 + mStateTablePtr
 ; Input: A = state ID
@@ -204,3 +167,4 @@ mCurrentState:     .byte $FF
 mStateTablePtr:    .word $0000
 mStateCallPtr:     .word $0000
 mStateTempOffset:  .byte $00
+mCbOffsetTemp:     .byte $00

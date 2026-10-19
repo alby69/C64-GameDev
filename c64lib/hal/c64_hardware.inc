@@ -179,4 +179,20 @@ COLOR_MEM     = $D800
     ORA #(3 - (bank)) : \
     STA $DD00
 
+#define CALC_SPRITE_POINTER(addr_high, addr_low, result_reg) \
+    LDA addr_low : \
+    LSR addr_high : \
+    ROR : \
+    LSR addr_high : \
+    ROR : \
+    LSR addr_high : \
+    ROR : \
+    LSR addr_high : \
+    ROR : \
+    LSR addr_high : \
+    ROR : \
+    LSR addr_high : \
+    ROR : \
+    STA result_reg
+
 #endif

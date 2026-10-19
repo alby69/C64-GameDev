@@ -115,8 +115,8 @@ _zp_free_loop:
 ; ----------------------------------------------------------------------------
 
 ; Input: A = bit index (0 to 191)
-; Output: Carry = bit value (0 or 1)
-_zp_is_bit_set:
+; Output: X = byte offset (0 to 23), Y = bit mask index (0 to 7)
+_zp_get_bit_params:
         PHA
         AND #$07                ; Bit offset (0 to 7)
         TAY
@@ -125,6 +125,12 @@ _zp_is_bit_set:
         LSR
         LSR                     ; Byte offset (0 to 23)
         TAX
+        RTS
+
+; Input: A = bit index (0 to 191)
+; Output: Carry = bit value (0 or 1)
+_zp_is_bit_set:
+        JSR _zp_get_bit_params
         LDA ZP_ALLOC_TABLE,X
         AND _zp_bit_masks,Y
         BNE _zp_bit_is_1
@@ -136,14 +142,7 @@ _zp_bit_is_1:
 
 ; Input: A = bit index (0 to 191)
 _zp_set_bit:
-        PHA
-        AND #$07
-        TAY
-        PLA
-        LSR
-        LSR
-        LSR
-        TAX
+        JSR _zp_get_bit_params
         LDA ZP_ALLOC_TABLE,X
         ORA _zp_bit_masks,Y
         STA ZP_ALLOC_TABLE,X
@@ -151,14 +150,7 @@ _zp_set_bit:
 
 ; Input: A = bit index (0 to 191)
 _zp_clear_bit:
-        PHA
-        AND #$07
-        TAY
-        PLA
-        LSR
-        LSR
-        LSR
-        TAX
+        JSR _zp_get_bit_params
         LDA ZP_ALLOC_TABLE,X
         AND _zp_bit_inv_masks,Y
         STA ZP_ALLOC_TABLE,X
