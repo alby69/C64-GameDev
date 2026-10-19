@@ -117,6 +117,16 @@ Dispatches update ticks to the current state callback.
 ### `state_draw`
 Dispatches redraw ticks to the current state callback.
 
+### `state_invoke_callback`
+Internal helper routine to calculate and execute the callback pointer for a state ID and callback offset (`STATE_CB_ENTER`, `STATE_CB_EXIT`, `STATE_CB_UPDATE`, `STATE_CB_DRAW`).
+
+---
+
+## 🛠️ Hardware Macros (`c64lib/hal/c64_hardware.inc`)
+
+### `CALC_SPRITE_POINTER(addr_high, addr_low, result_reg)`
+Calculates the VIC-II sprite pointer byte value by right-shifting a 16-bit address by 6 bits (address / 64).
+
 ---
 
 ## 👾 Sprite Engine & Sprite Multiplexer (`c64lib/game/sprite_engine.asm`)

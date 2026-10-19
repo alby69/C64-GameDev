@@ -71,3 +71,10 @@ Refactored Space Invaders inside `games/invaders/` into structured state callbac
 - **Task 9.2 — Archiviare il Port Monolitico Legacy**: Il primo port PET→C64 monolitico (`main.asm`, `memory.inc`, `video_*.asm`, `game_*.asm`, `data.asm`, ecc.) — superato da `games/invaders/` basato su `c64lib` — è archiviato in `source/legacy/` come riferimento storico.
 - **Task 9.3 — Aggiornamento Tooling e Documentazione**: Il `Makefile` ora delega al build system Python (`games/invaders/c64project.yaml`). README, ROADMAP e TUTORIAL aggiornati per riflettere la struttura definitiva.
 - **Task 9.4 — Verifica Solo-C64**: Nessun residuo di indirizzi hardware PET (`$E8xx`, `$8000`, vettori `$0090`) nel codice attivo (`games/`, `c64lib/`, `c64kit/`). Tutto l'assembly attivo è compilato e testato per Commodore 64.
+
+### 🎯 PHASE 10 — Refactoring Architetturale (KISS/DRY/Decoupling)
+**Status: 100% COMPLETATA**
+- **Task 10.1 — Centralizzazione Callback State Machine**: Refactoring di `c64lib/game/state_machine.asm` per utilizzare l'helper `state_invoke_callback` con costanti di offset `STATE_CB_*`.
+- **Task 10.2 — Astrazione Hardware Sprite Engine**: Sostituzione dei calcoli shift manuali con la macro `CALC_SPRITE_POINTER` in `c64lib/hal/c64_hardware.inc` ed utilizzo esteso delle costanti HAL `SCREEN_MEM` e `COLOR_MEM` in `c64lib/game/sprite_engine.asm`.
+- **Task 10.3 — Ottimizzazione DRY Memory Manager**: Estratta la routine `_zp_get_bit_params` in `c64lib/core/memory_manager.asm` per eliminare la duplicazione di calcolo offset/maschera bit.
+- **Task 10.4 — Pulizia e Disaccoppiamento Build System**: Refactoring di `c64kit/build/build_system.py` introducendo `_run_external_tool` per incapsulare le chiamate ai tool di packaging (`c1541`, `cartconv`).

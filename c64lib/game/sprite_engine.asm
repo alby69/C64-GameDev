@@ -101,12 +101,12 @@ _sd_calc_screen:
         ADC zScreenDest+1
         STA zScreenDest+1
 
-        ; Color RAM has identical offset, just base $D800 instead of $0400
+        ; Color RAM has identical offset, with base COLOR_MEM instead of SCREEN_MEM
         LDA zScreenDest
         STA zColorDest
         LDA zScreenDest+1
         AND #$03                ; Keep offset within 1KB
-        ORA #$D8                ; Base $D800
+        ORA #>COLOR_MEM         ; Base COLOR_MEM high byte ($D8)
         STA zColorDest+1
 
         ; 3. Draw character matrix
@@ -223,23 +223,8 @@ _sd_hw_pos:
         STA mSprTempPtrL
 
         ; Pointer value = (Address - VIC_BANK_BASE) / 64
-        ; For simplicity, assume VIC Bank 0 (base $0000)
-        ; pointer = (H * 256 + L) / 64 = H * 4 + L / 64
-        ; Let's shift the address right 6 times
-        LDA mSprTempPtrL
-        LSR mSprTempPtrH
-        ROR
-        LSR mSprTempPtrH
-        ROR
-        LSR mSprTempPtrH
-        ROR
-        LSR mSprTempPtrH
-        ROR
-        LSR mSprTempPtrH
-        ROR
-        LSR mSprTempPtrH
-        ROR
-        STA mSprTempPtrL        ; Pointer value
+        ; Shift address right 6 times using CALC_SPRITE_POINTER macro
+        CALC_SPRITE_POINTER(mSprTempPtrH, mSprTempPtrL, mSprTempPtrL)
 
         LDX mSprTempID
         LDA mSprTempPtrL
@@ -606,7 +591,7 @@ _sma_done:
 
 ; ----------------------------------------------------------------------------
 ; HELPER: _spr_calc_screen_addr
-; PURPOSE: Calculate screen RAM start row address (base $0400)
+; PURPOSE: Calculate screen RAM start row address (base SCREEN_MEM)
 ; INPUT: A = Y coordinate (row 0 to 24)
 ; OUTPUT: zScreenDest = SCREEN_MEM + Y * 40
 ; ----------------------------------------------------------------------------
@@ -619,7 +604,7 @@ _spr_calc_screen_addr:
         PLA
 
         TAY
-        BEQ _scsa_done          ; If Y=0, screen RAM is exactly base $0400
+        BEQ _scsa_done          ; If Y=0, screen RAM is exactly base SCREEN_MEM
 _scsa_loop:
         LDA zScreenDest
         CLC

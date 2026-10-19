@@ -171,6 +171,20 @@ def run_assembler(project: C64Project) -> bool:
         return False
 
 
+def _run_external_tool(tool_name: str, args: List[str], success_msg: str, warning_msg: str) -> bool:
+    """Helper function to execute external packaging tools with standardized exception and error handling."""
+    try:
+        res = subprocess.run([tool_name] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if res.returncode == 0:
+            print(success_msg)
+            return True
+        print(f"Error: {warning_msg}\n{res.stderr}")
+        return False
+    except FileNotFoundError:
+        print(f"Warning: '{tool_name}' utility (part of VICE) is not installed or not in PATH. Skipping step.")
+        return True  # Do not fail build if optional external tool is missing
+
+
 def package_project(project: C64Project) -> bool:
     """Packages the compiled output file (.prg) into configured target formats (.d64, .crt).
 
@@ -197,33 +211,19 @@ def package_project(project: C64Project) -> bool:
     if project.packaging.get("d64"):
         d64_path = os.path.join(base_dir, f"{filename_no_ext}.d64") if base_dir else f"{filename_no_ext}.d64"
         print(f"Packaging: Generating disk image '{d64_path}'...")
-        # Remove existing file if any
         if os.path.exists(d64_path):
             try:
                 os.remove(d64_path)
             except OSError:
                 pass
 
-        # c1541 format command
-        cmd_format = ["c1541", "-format", f"{filename_no_ext[:16]},01", "d64", d64_path]
-        # c1541 write command
-        cmd_write = ["c1541", d64_path, "-write", prg_path, filename_no_ext[:16]]
-
-        try:
-            res_format = subprocess.run(cmd_format, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if res_format.returncode != 0:
-                print(f"Error: Failed to format disk image {d64_path}. Error:\n{res_format.stderr}")
+        cmd_format = ["-format", f"{filename_no_ext[:16]},01", "d64", d64_path]
+        if _run_external_tool("c1541", cmd_format, "", f"Failed to format disk image {d64_path}"):
+            cmd_write = [d64_path, "-write", prg_path, filename_no_ext[:16]]
+            if not _run_external_tool("c1541", cmd_write, f"Disk image '{d64_path}' created successfully.", f"Failed to write to disk image {d64_path}"):
                 success = False
-            else:
-                res_write = subprocess.run(cmd_write, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                if res_write.returncode != 0:
-                    print(f"Error: Failed to write to disk image {d64_path}. Error:\n{res_write.stderr}")
-                    success = False
-                else:
-                    print(f"Disk image '{d64_path}' created successfully.")
-        except FileNotFoundError:
-            print("Warning: 'c1541' utility (part of VICE) is not installed or not in PATH. Skipping .d64 generation.")
-            pass
+        else:
+            success = False
 
     # 2. Generate .crt cartridge
     crt_option = project.packaging.get("crt")
@@ -231,31 +231,17 @@ def package_project(project: C64Project) -> bool:
         crt_path = os.path.join(base_dir, f"{filename_no_ext}.crt") if base_dir else f"{filename_no_ext}.crt"
         print(f"Packaging: Generating cartridge '{crt_path}'...")
 
-        # Determine cartridge type
-        cart_type = "normal"
-        if isinstance(crt_option, str):
-            cart_type = crt_option
+        cart_type = crt_option if isinstance(crt_option, str) else "normal"
 
-        # Remove existing file if any
         if os.path.exists(crt_path):
             try:
                 os.remove(crt_path)
             except OSError:
                 pass
 
-        # cartconv command
-        cmd_cart = ["cartconv", "-p", "-t", cart_type, "-i", prg_path, "-o", crt_path]
-
-        try:
-            res_cart = subprocess.run(cmd_cart, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if res_cart.returncode != 0:
-                print(f"Error: Failed to convert cartridge {crt_path}. Error:\n{res_cart.stderr}")
-                success = False
-            else:
-                print(f"Cartridge '{crt_path}' created successfully with type '{cart_type}'.")
-        except FileNotFoundError:
-            print("Warning: 'cartconv' utility (part of VICE) is not installed or not in PATH. Skipping .crt generation.")
-            pass
+        cmd_cart = ["-p", "-t", cart_type, "-i", prg_path, "-o", crt_path]
+        if not _run_external_tool("cartconv", cmd_cart, f"Cartridge '{crt_path}' created successfully with type '{cart_type}'.", f"Failed to convert cartridge {crt_path}"):
+            success = False
 
     return success
 
